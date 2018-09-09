@@ -1,27 +1,38 @@
 #!/usr/bin/env bash
-set -euo pipefail
+#[[ -n ${TRACE:-} ]] && set -x
+set -exuo pipefail
+exec > >(tee -i "${LOG_FILE:-install.log}")
+exec 2>&1
+
 hostname=nas
 domain=home.lan
 username=nasuser
 password=lemmein123
+
 packages=(
   base
   base-devel
   efibootmgr
   f2fs-tools
-  grub
   intel-ucode
   libva-intel-driver
   libvdpau-va-gl
   linux-lts
   linux-lts-headers
   lm_sensors
+  neovim
   monit
   openssh
+  python
+  python-pip
+  python2
+  python2-pip
   samba
   snapper
   smartmontools
   sudo
+  systemd-boot
+  tmux
   zsh
 )
 
@@ -30,8 +41,10 @@ packages_ignore=(
   linux-headers
 )
 
+ESP=/boot
+
 bail() {
-  echo "$@" 1>&2 && exit 1
+  echo "$@" && exit 1
 }
 
 install() {
@@ -52,7 +65,7 @@ install() {
   parted "$system_device" mkpart primary linux-swap 551MiB 9GiB
   parted "$system_device" mkpart primary 9GiB 100%
 
-  parts=("$(fdisk -l "$system_device" | awk '/^\/dev/ {print $1}')")
+  parts=($(fdisk -l "$system_device" | awk '/^\/dev/ {print $1}'))
   boot_part="${parts[0]}"
   swap_part="${parts[1]}"
   root_part="${parts[2]}"
@@ -62,8 +75,8 @@ install() {
   mkfs.fat -F32 "$boot_part"
   mkfs.btrfs -f -L "$root_label" "$root_part"
   mount "$root_part" /mnt
-  mkdir -p /mnt/efi
-  mount "$boot_part" /mnt/efi
+  mkdir -p /mnt${ESP}
+  mount "$boot_part" /mnt${ESP}
 
   pacstrap /mnt "${packages[@]}" --ignore "${packages_ignore[@]}"
 
@@ -77,22 +90,24 @@ install() {
 
   set_hostname "$hostname" "$domain"
 
-  setup_efistub_update
+  #pip install pip --upgrade
+  #pip2 install pip --upgrade
+  #pip install neovim
+  #pip2 install neovim
 
-  install_grub x86_64-efi
+  bootctl --path=$ESP install
+  write_pacman_systemd_boot_hook
+  write_loader_conf
+  write_loader_entry
 
   install_yay
 
   install_plexpass
 
   setup_users
-  #umount -R /mnt
-}
 
-install_grub() {
-  local target="$1"
-  grub-install --target="$target" --efi-directory=/efi --bootloader-id=GRUB
-  grub-mkconfig -o /boot/grub/grub.cfg
+  exit
+  umount -R /mnt
 }
 
 install_plexpass() {
@@ -113,16 +128,11 @@ setup_clock() {
   hwclock --systohc
 }
 
-setup_efistub_update() {
-  write_efistub_update_path
-  write_efistub_update_service
-  systemctl enable efistub_update.path
-  systemctl start efistub-update.path
-}
-
 setup_users() {
   useradd -d "/home/$username" -G wheel -s "$(command -v zsh)" "$username"
   printf '%s:%s' "$username" "$password" | chpasswd
+  # Force change upon next login
+  passwd --expire "$username"
   echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
   passwd -l root
 }
@@ -140,39 +150,49 @@ set_hostname() {
   echo "127.0.0.1	$hostname.$domain $hostname" >> /etc/hosts
 }
 
-write_efistub_update_path() {
-cat << 'EOF' > /etc/systemd/system/efistub-update.path
-[Unit]
-Description=Copy EFISTUB Kernel to EFI system partition
-
-[Path]
-PathChanged=/boot/initramfs-linux-fallback.img
-
-[Install]
-WantedBy=multi-user.target
-WantedBy=system-update.target
+write_loader_conf() {
+  cat << EOF > $ESP/loader/loader.conf
+default arch
+timeout 3
+editor  no
 EOF
 }
 
-write_efistub_update_service() {
-cat << EOF > /etc/systemd/system/efistub-update.service
-[Unit]
-Description=Copy EFISTUB Kernel to EFI system partition
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/cp -af /boot/vmlinuz-linux esp/EFI/arch/
-ExecStart=/usr/bin/cp -af /boot/initramfs-linux.img esp/EFI/arch/
-ExecStart=/usr/bin/cp -af /boot/initramfs-linux-fallback.img esp/EFI/arch/
+write_loader_entry() {
+  cat << EOF > $ESP/loader/entries/arch.conf
+title Arch Linux
+linux /vmlinuz-linux
+initrd /intel-ucode.img
+initrd /initramfs-linux.img
+options root=LABEL=arch_os rw
 EOF
 }
 
 write_plex_config() {
-cat << EOF > /etc/systemd/system/plexmediaserver.service.d/restrict.conf
+  cat << EOF > /etc/systemd/system/plexmediaserver.service.d/restrict.conf
 [Service]
 ReadOnlyDirectories=/
 ReadWriteDirectories=/var/lib/plex /tmp
 EOF
 }
 
+write_pacman_systemd_boot_hook() {
+  cat << EOF > /etc/pacman.d/hooks/systemd-boot.hook
+[Trigger]
+Type = Package
+Operation = Upgrade
+Target = systemd
+
+[Action]
+Description = Updating systemd-boot
+When = PostTransaction
+Exec = /usr/bin/bootctl update
+EOF
+
+if [[ ${1:-} != startup ]]; then
+  pacman --noconfirm -Sy tmux
+  exec tmux new-session -d -s "'$0' startup $@"
+fi
+
+shift
 install "$@"
