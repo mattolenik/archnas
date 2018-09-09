@@ -24,36 +24,24 @@ packages=(
   sudo
   zsh
 )
+
 packages_ignore=(
   linux
   linux-headers
 )
 
-get_part_uuid() {
-  blkid $1 | awk -F\" '/PARTUUID/ {print $2}'
-}
-
 bail() {
   echo "$@" 1>&2 && exit 1
-}
-
-install_yay() {
-  tmp="$(mktemp)"
-  trap "rm -rf $tmp" RETURN
-  git clone https://aur.archlinux.org/yay.git "$tmp"
-  cd "$tmp"
-  makepkg -si
 }
 
 install() {
   timedatectl set-ntp true
 
   system_device="${1:-}"
-  # TODO: Check if device is valid
   [[ -z $system_device ]] && bail "First argument must be device for system install"
 
   echo "Continue installation onto $system_device? This will destroy any existing data."
-  read -p "Type YES to proceed, anything else to abort) " continue
+  read -rp "Type YES to proceed, anything else to abort) " continue
   [[ $continue != "YES" ]] && bail "Aborting installation"
 
   wipefs -a "$system_device"
@@ -64,12 +52,10 @@ install() {
   parted "$system_device" mkpart primary linux-swap 551MiB 9GiB
   parted "$system_device" mkpart primary 9GiB 100%
 
-  parts=($(fdisk -l "$system_device" | awk '/^\/dev/ {print $1}'))
+  parts=("$(fdisk -l "$system_device" | awk '/^\/dev/ {print $1}')")
   boot_part="${parts[0]}"
   swap_part="${parts[1]}"
   root_part="${parts[2]}"
-  boot_uuid="$(get_part_uuid "$boot_part")"
-  root_uuid="$(get_part_uuid "$root_part")"
   root_label=system
 
   mkswap "$swap_part"
@@ -79,47 +65,82 @@ install() {
   mkdir -p /mnt/efi
   mount "$boot_part" /mnt/efi
 
-  pacstrap /mnt ${packages[@]} --ignore ${packages_ignore[@]}
+  pacstrap /mnt "${packages[@]}" --ignore "${packages_ignore[@]}"
 
   genfstab -U /mnt >> /mnt/etc/fstab
 
   arch-chroot /mnt
 
-  ln -sf /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
-  hwclock --systohc
+  setup_clock
 
-  echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen
-  echo 'LANG=en_US.UTF-8' > /etc/locale.conf
-  locale-gen
+  set_locale
 
-  echo "$hostname" > /etc/hostname
-  echo "127.0.0.1	$hostname.$domain $hostname" >> /etc/hosts
+  set_hostname "$hostname" "$domain"
 
-  write-efistub-update-path
-  write-efistub-update-service
-  systemctl enable efistub-update.path
-  systemctl start efistub-update.path
+  setup_efistub_update
 
-  grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
-  grub-mkconfig -o /boot/grub/grub.cfg
+  install_grub x86_64-efi
 
   install_yay
 
-  yay -Syu plex-media-server-plexpass
-  write_plex_config
+  install_plexpass
 
   setup_users
   #umount -R /mnt
 }
 
+install_grub() {
+  local target="$1"
+  grub-install --target="$target" --efi-directory=/efi --bootloader-id=GRUB
+  grub-mkconfig -o /boot/grub/grub.cfg
+}
+
+install_plexpass() {
+  yay -Syu plex-media-server-plexpass
+  write_plex_config
+}
+
+install_yay() {
+  tmp="$(mktemp)"
+  trap 'rm -rf $tmp' RETURN
+  git clone https://aur.archlinux.org/yay.git "$tmp"
+  cd "$tmp"
+  makepkg -si
+}
+
+setup_clock() {
+  ln -sf /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
+  hwclock --systohc
+}
+
+setup_efistub_update() {
+  write_efistub_update_path
+  write_efistub_update_service
+  systemctl enable efistub_update.path
+  systemctl start efistub-update.path
+}
+
 setup_users() {
-  useradd -d "/home/$username" -G wheel -s "$(which zsh)" "$username"
+  useradd -d "/home/$username" -G wheel -s "$(command -v zsh)" "$username"
   printf '%s:%s' "$username" "$password" | chpasswd
   echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
   passwd -l root
 }
 
-write-efistub-update-path() {
+set_locale() {
+  echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen
+  echo 'LANG=en_US.UTF-8' > /etc/locale.conf
+  locale-gen
+}
+
+set_hostname() {
+  local hostname="$1"
+  local domain="$2"
+  echo "$hostname" > /etc/hostname
+  echo "127.0.0.1	$hostname.$domain $hostname" >> /etc/hosts
+}
+
+write_efistub_update_path() {
 cat << 'EOF' > /etc/systemd/system/efistub-update.path
 [Unit]
 Description=Copy EFISTUB Kernel to EFI system partition
@@ -133,7 +154,7 @@ WantedBy=system-update.target
 EOF
 }
 
-write-efistub-update-service() {
+write_efistub_update_service() {
 cat << EOF > /etc/systemd/system/efistub-update.service
 [Unit]
 Description=Copy EFISTUB Kernel to EFI system partition
