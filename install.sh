@@ -118,6 +118,8 @@ install() {
   rm -f "/mnt/$PASSWORD_FILE"
 
   umount -R /mnt
+
+  read -rp $'Installation complete! Jot down your password and press any key to reboot\n'
 }
 
 print_install_banner() {
@@ -165,3 +167,4 @@ EOF
 }
 
 install "$@"
+831b3c
