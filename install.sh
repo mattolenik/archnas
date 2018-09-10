@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
+##
+# Installs an Arch-based NAS onto the specified disk.
+# It will partition the disk and install the OS.
+#
+# Args:
+#   $1 - Device to be auto-partitioned, e.g. /dev/sda.
+#        Existing data will be removed.
+##
+
+# TODO: Add banners/section announcements with timestamps
+
 [[ -n ${TRACE:-} ]] && set -x
 set -euo pipefail
+
 script_name="${0##*/}"
 script_noext="${script_name%.*}"
 exec > >(tee -i "${LOG_FILE:-$script_noext.log}"); exec 2>&1
 
-##
-# Installs an Arch-based NAS onto the specified disk.
-# It will partition the disk and install the OS.
-# $1 - Device to be partitioned, e.g. /dev/sda
-##
+trap 'echo ERROR on lineno $LINENO in "$(basename -- "$0")"' ERR
 
 source vars.sh
 export HOSTNAME
@@ -21,7 +29,7 @@ SWAP_PART_SIZE=${SWAP_PART_SIZE:-4096}
 
 # UEFI system partition location
 export ESP=/boot
-
+export PASSWORD_FILE=/userpassword
 
 packages=(
   base
@@ -75,7 +83,6 @@ install() {
 
   print_install_banner
 
-  set -x
   wipefs -a "$system_device"
   parted "$system_device" mklabel gpt
 
@@ -108,14 +115,15 @@ install() {
 
   print_done_banner
   print_password_notice
-  rm -f /mnt/userpassword
+  rm -f "/mnt/$PASSWORD_FILE"
 
   umount -R /mnt
 }
 
 print_install_banner() {
+  tput setaf 4
+  tput bold
   cat <<'EOF'
-$(tput setaf 4)
   _____              _          _  _  _
  |_   _|            | |        | || |(_)
    | |   _ __   ___ | |_  __ _ | || | _  _ __    __ _
@@ -124,21 +132,24 @@ $(tput setaf 4)
  |_____||_| |_||___/ \__|\__,_||_||_||_||_| |_| \__, |(_)(_)(_)
                                                  __/ |
                                                 |___/
-$(tput sgr0)
+
 EOF
+  tput sgr0
 }
 
 print_done_banner() {
+  tput setaf 3
+  tput bold
   cat <<'EOF'
-$(tput setaf 4)
   _____                       _
  |  __ \                     | |
  | |  | |  ___   _ __    ___ | |
  | |  | | / _ \ | '_ \  / _ \| |
  | |__| || (_) || | | ||  __/|_|
  |_____/  \___/ |_| |_| \___|(_)
-$(tput sgr0)
+
 EOF
+  tput sgr0
 }
 
 print_password_notice() {
@@ -148,7 +159,8 @@ $(tput setaf 1)
 ╚═╗╠═╣╚╗╔╝║╣    ║ ╠═╣║╚═╗  ╠═╝╠═╣╚═╗╚═╗║║║║ ║╠╦╝ ║║  ║
 ╚═╝╩ ╩ ╚╝ ╚═╝   ╩ ╩ ╩╩╚═╝  ╩  ╩ ╩╚═╝╚═╝╚╩╝╚═╝╩╚══╩╝  o
 $(tput sgr0)
-Your initial password for user $USERNAME: $(tput setaf 1)$(cat /mnt/userpassword)$(tput sgr0)
+Your $(tput setaf 3)initial password$(tput sgr0) for user $USERNAME: $(tput setaf 1)$(cat "/mnt/$PASSWORD_FILE")$(tput sgr0)
+
 EOF
 }
 

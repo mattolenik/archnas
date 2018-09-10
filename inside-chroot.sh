@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -exuo pipefail
+set -euo pipefail
+trap 'echo ERROR on lineno $LINENO in "$(basename -- "$0")"' ERR
 
 main() {
   setup_users
@@ -23,6 +24,7 @@ main() {
 
 cleanup() {
   rm -rf /tmp/*
+  find /var/log -type f | xargs rm -f
   find /root /home -type f -name .bash_history | xargs rm -f
 }
 
@@ -56,14 +58,16 @@ install_yay() {
   (
     cd $(mktemp -d)
     curl -sSL $(get_github_latest_release Jguer/yay) | tar xz --strip-components=1
-    mv yay /usr/local/bin
-    cat bash >> /home/$USERNAME/.bashrc
-    cat zsh >> /home/$USERNAME/.zshrc
+    mv yay /usr/bin
+    mkdir /etc/bashrc.d
+    mkdir /etc/zshrc.d
+    mv bash /etc/bashrc.d/yay
+    mv zsh /etc/zshrc.d/yay
   )
 }
 
 setup_clock() {
-  [[ $TIMEZONE == auto ]] && export TIMEZONE="$(get_timezone "$(get_external_ip)")"
+  [[ $TIMEZONE == auto ]] && export TIMEZONE="$(get_timezone_by_ip "$(get_external_ip)")"
   ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
   hwclock --systohc
 }
@@ -85,9 +89,8 @@ get_external_ip() {
   dig +short myip.opendns.com @resolver1.opendns.com
 }
 
-get_timezone() {
-  local ip="$1"
-  curl -s "https://freegeoip.app/json/$ip" | jq -r .time_zone
+get_timezone_by_ip() {
+  curl -s "https://freegeoip.app/json/$1" | jq -r .time_zone
 }
 
 setup_users() {
@@ -104,7 +107,7 @@ set_user_password() {
   echo "$USERNAME:$password" | chpasswd
   passwd --expire "$USERNAME"
   #echo "Your initial password is ${password} — you will be prompted to change it upon first login"
-  echo "$password" > /userpassword
+  echo "$password" > "$PASSWORD_FILE"
 }
 
 write_plex_config() {
