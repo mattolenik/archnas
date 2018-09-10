@@ -1,20 +1,70 @@
 #!/usr/bin/env bash
+set -exuo pipefail
+
+main() {
+  setup_users
+
+  install_pip
+  setup_clock
+  set_locale
+  set_hostname "$HOSTNAME" "$DOMAIN"
+
+  grub-install --target=x86_64-efi --efi-directory=$ESP --bootloader-id=GRUB
+  grub-mkconfig -o /boot/grub/grub.cfg
+
+  install_yay
+  install_plexpass
+  #install_ups
+
+  set_user_password
+
+  cleanup
+}
+
+cleanup() {
+  rm -rf /tmp/*
+  find /root /home -type f -name .bash_history | xargs rm -f
+}
+
+get_github_latest_release() {
+  curl -s https://api.github.com/repos/$1/releases/latest | jq -r '.assets[].browser_download_url'
+}
+
+
+install_ups() {
+  yay -Syu network-ups-tools
+  cat <<EOF > /etc/ups/ups.conf
+[ups]
+    driver = usbhid-ups
+    port = auto
+EOF
+}
+
+install_pip() {
+  pip install pip --upgrade
+  pip2 install pip --upgrade
+  pip install neovim
+  pip2 install neovim
+}
 
 install_plexpass() {
-  yay -Syu plex-media-server-plexpass
+  #sudo -u "$USERNAME" yay -Syu plex-media-server-plexpass
   write_plex_config
 }
 
 install_yay() {
-  tmp="$(mktemp)"
-  trap 'rm -rf $tmp' RETURN
-  git clone https://aur.archlinux.org/yay.git "$tmp"
-  cd "$tmp"
-  makepkg -si
+  (
+    cd $(mktemp -d)
+    curl -sSL $(get_github_latest_release Jguer/yay) | tar xz --strip-components=1
+    mv yay /usr/local/bin
+    cat bash >> /home/$USERNAME/.bashrc
+    cat zsh >> /home/$USERNAME/.zshrc
+  )
 }
 
 setup_clock() {
-  ln -sf /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
+  [[ $TIMEZONE == auto ]] && export TIMEZONE="$(get_timezone "$(get_external_ip)")"
+  ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
   hwclock --systohc
 }
 
@@ -28,34 +78,43 @@ set_hostname() {
   local hostname="$1"
   local domain="$2"
   echo "$hostname" > /etc/hostname
-  echo "127.0.0.1	$hostname.$domain $hostname" >> /etc/hosts
+  echo "127.0.0.1 $hostname.$domain $hostname" >> /etc/hosts
+}
+
+get_external_ip() {
+  dig +short myip.opendns.com @resolver1.opendns.com
+}
+
+get_timezone() {
+  local ip="$1"
+  curl -s "https://freegeoip.app/json/$ip" | jq -r .time_zone
+}
+
+setup_users() {
+  echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
+  echo "PermitRootLogin no" >> /etc/ssh/sshd_config
+  useradd -d "/home/$USERNAME" -G wheel -s "$(command -v zsh)" "$USERNAME"
+  mkdir -p "/home/$USERNAME"
+  chown -R "$USERNAME:$USERNAME" "/home/$USERNAME"
+  passwd -l root
+}
+
+set_user_password() {
+  local password="$(openssl rand -hex 3)"
+  echo "$USERNAME:$password" | chpasswd
+  passwd --expire "$USERNAME"
+  #echo "Your initial password is ${password} — you will be prompted to change it upon first login"
+  echo "$password" > /userpassword
 }
 
 write_plex_config() {
-  cat << EOF > /etc/systemd/system/plexmediaserver.service.d/restrict.conf
+  conf=/etc/systemd/system/plexmediaserver.service.d/restrict.conf
+  mkdir -p "$(dirname "$conf")"
+  cat << 'EOF' > "$conf"
 [Service]
 ReadOnlyDirectories=/
 ReadWriteDirectories=/var/lib/plex /tmp
 EOF
 }
 
-setup_clock
-set_locale
-set_hostname "$HOSTNAME" "$DOMAIN"
-
-grub-install --target=x86_64-efi --efi-directory=$ESP --bootloader-id=GRUB
-grub-mkconfig -o /boot/grub/grub.cfg
-
-install_yay
-install_plexpass
-
-pip install pip --upgrade
-pip2 install pip --upgrade
-pip install neovim
-pip2 install neovim
-
-echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
-useradd -d "/home/$USERNAME" -G wheel -s "$(command -v zsh)" "$USERNAME"
-passwd --expire "$USERNAME"
-#printf '%s:%s' "$USERNAME" "$PASSWORD" | chpasswd
-passwd -l root
+main "$@"
