@@ -3,9 +3,7 @@
 # Installs an Arch-based NAS onto the specified disk.
 # It will partition the disk and install the OS.
 #
-# Args:
-#   $1 - Device to be auto-partitioned, e.g. /dev/sda.
-#        Existing data will be removed.
+# No arguments are needed, guided prompts will follow.
 ##
 
 # TODO: Add banners/section announcements with timestamps
@@ -20,15 +18,18 @@ exec > >(tee -i "${LOG_FILE:-$script_noext.log}"); exec 2>&1
 trap 'echo ERROR on line $LINENO in "$(basename -- "$0")"' ERR
 
 source vars.sh
-export HOSTNAME
-export DOMAIN
-export USERNAME
+export USERNAME=${USERNAME:-nasuser}
+export HOSTNAME=${HOSTNAME:-archnas-$((RANDOM % 100))}
+export DOMAIN=${DOMAIN:-local}
 export TIMEZONE=${TIMEZONE:-auto}
 BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
 SWAP_PART_SIZE=${SWAP_PART_SIZE:-4096}
 
 # UEFI system partition location
-export ESP=/boot
+export ESP=${ESP:-/boot}
+
+# The chroot'd step outputs a temp password for the user in this location,
+# which is then read and printed out by the installer at the end.
 export PASSWORD_FILE=/userpassword
 
 packages=(
@@ -83,8 +84,7 @@ red() { printf %s "${red}${bold}$*${clr}"; }
 blue() { printf %s "${blue}${bold}$*${clr}"; }
 
 install() {
-  system_device="${1:-}"
-  [[ -z $system_device ]] && bail "First argument must be device for system install"
+  system_device="$(select_disk)"
 
   timedatectl set-ntp true
 
@@ -95,6 +95,7 @@ install() {
   [[ $continue != "YES" ]] && bail "Aborting installation"
 
   print_install_banner
+  echo `blue "$(figlet "Installing...")`
 
   wipefs -a "$system_device"
   parted "$system_device" mklabel gpt
@@ -119,57 +120,41 @@ install() {
 
   pacstrap /mnt "${packages[@]}" --ignore "${packages_ignore[@]}"
 
-  # Add discard flag to enable SSD trim
+  # Add discard flag to enable SSD trim.
   genfstab -U /mnt | sed 's/ssd/ssd,discard/' > /mnt/etc/fstab
 
+  # Print out fstab for logging purposes.
   cat /mnt/etc/fstab
 
+  # Perform the part of the install that runs inside the chroot.
   cat inside-chroot.sh | arch-chroot /mnt /bin/bash
 
-  print_done_banner
+  echo `green "$(figlet "...done!")`
+
   print_password_notice "/mnt/$PASSWORD_FILE"
   rm -f "/mnt/$PASSWORD_FILE"
 
   umount -R /mnt
 
-  read -rp $'Installation complete! Jot down your password and press enter to reboot\n'
+  read -rp $'Installation complete! Jot down your password and press enter to reboot.\n'
   reboot
 }
 
-get_disk_devices() {
-  lsblk -o name,type -nrd | awk '/disk$/ {print $1}'
+# Find available, writeable disks for install
+list_disks() {
+  lsblk -o type,ro,name,size,model -nrd | awk '/^disk 0/ {print substr($0, index($0,$3))}' | sed 's/\\x20/ /g' | sort
 }
 
-print_install_banner() {
-  printf %s $bold$blue
-  cat <<'EOF'
- ___
-  |  ._   _ _|_  _. | | o ._   _
- _|_ | | _>  |_ (_| | | | | | (_| o o o
-                               _|
-EOF
-  printf %s $clr
-}
-
-print_done_banner() {
-  printf %s $bold$green
-  cat <<'EOF'
-  _
- | \  _  ._   _  |
- |_/ (_) | | (/_ o
-
-EOF
-  printf $clr
+select_disk() {
+  echo "Choose a disk to auto-partition. Its data will be lost during install."
+  select disk in $(list_disks); do
+    echo "$disk" | awk '{print "/dev/"$1}'
+  done
 }
 
 print_password_notice() {
   local pass_file="$1"
-  printf %s $bold$red
-  cat << 'EOF'
-  __           _   ___    ___  __    _       __  __        _   _   _
- (_   /\ \  / |_    | |_|  |  (_    |_) /\  (_  (_ \    / / \ |_) | \ |
- __) /--\ \/  |_    | | | _|_ __)   |  /--\ __) __) \/\/  \_/ | \ |_/ o
-EOF
+  echo `red "$(figlet -f small "SAVE THIS PASSWORD!")"`
   cat << EOF
 Your `red "temporary password"` for user $USERNAME is: `red "$(< "$pass_file")"`
 You will be prompted to choose a new password upon first login.
@@ -177,4 +162,12 @@ You will be prompted to choose a new password upon first login.
 EOF
 }
 
+prereqs=(
+  figlet
+)
+if ! command -v "${prereqs[0]}" $>/dev/null; then
+  pacman -Sy ${prereqs[@]}
+fi
+
+# TODO: redo tmux?
 install "$@"
