@@ -24,6 +24,7 @@ export USERNAME=${USERNAME:-nasuser}
 export HOSTNAME=${HOSTNAME:-archnas-$((RANDOM % 100))}
 export DOMAIN=${DOMAIN:-local}
 export TIMEZONE=${TIMEZONE:-auto}
+ROOT_LABEL=${ROOT_LABEL:-system}
 BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
 SWAP_PART_SIZE=${SWAP_PART_SIZE:-4096}
 
@@ -50,6 +51,7 @@ packages=(
   linux-lts-headers
   lm_sensors
   neovim
+  nodejs
   monit
   openssh
   python
@@ -84,6 +86,7 @@ yellow() { printf %s "${yellow}${bold}$*${clr}"; }
 green() { printf %s "${green}${bold}$*${clr}"; }
 red() { printf %s "${red}${bold}$*${clr}"; }
 blue() { printf %s "${blue}${bold}$*${clr}"; }
+bold() { printf %s "${bold}$*${clr}"; }
 
 install() {
   system_device="$(select_disk)"
@@ -98,7 +101,7 @@ install() {
 
   cbanner $blue$bold "Installing..."
 
-  wipefs -a "$system_device"
+  wipefs -af "$system_device"
   parted "$system_device" mklabel gpt
 
   parted "$system_device" mkpart primary fat32 1MiB $((1+BOOT_PART_SIZE))MiB
@@ -110,12 +113,17 @@ install() {
   boot_part="${parts[0]}"
   swap_part="${parts[1]}"
   root_part="${parts[2]}"
-  root_label=system
 
+  # Create partitions
   mkswap "$swap_part"
+  swapon "$swap_part"
   mkfs.fat -F32 "$boot_part"
-  mkfs.btrfs -f -L "$root_label" "$root_part"
+  mkfs.btrfs -f -L "$ROOT_LABEL" "$root_part"
+
+  # Always mount root partition before next steps
   mount "$root_part" /mnt
+  trap 'umount -R /mnt' ERR
+
   mkdir -p /mnt${ESP}
   mount "$boot_part" /mnt${ESP}
 
@@ -175,7 +183,7 @@ print_password_notice() {
   figlet -f small "SAVE THIS PASSWORD!"
   printf %s $clr
   cat << EOF
-Your `red "temporary password"` for user $USERNAME is: `red "$(< "$pass_file")"`
+Your `red "temporary password"` for user `bold $USERNAME` is: `red "$(< "$pass_file")"`
 You will be prompted to choose a new password upon first login.
 
 EOF
@@ -186,10 +194,12 @@ prereqs=(
 )
 if ! command -v "${prereqs[0]}" $>/dev/null; then
   echo `blue "Installing prereqs..."`
-  pacman --noconfirm -Sy ${prereqs[@]}
+  pacman --noconfirm -Syq ${prereqs[@]}
   clear
   sleep 1
-  echo -e `blue "$(figlet "ArchNAS")"`
+  printf %s $blue$bold
+  figlet ArchNAS
+  printf %s $clr
 fi
 
 # TODO: redo tmux?

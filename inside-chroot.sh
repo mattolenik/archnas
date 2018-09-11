@@ -4,6 +4,7 @@ trap 'echo ERROR on line $LINENO in "$(basename -- "$0")"' ERR
 
 main() {
   setup_users
+  setup_shell
 
   install_pip
   setup_clock
@@ -101,6 +102,18 @@ setup_users() {
   mkdir -p "/home/$USERNAME"
   chown -R "$USERNAME:$USERNAME" "/home/$USERNAME"
   passwd -l root
+}
+
+setup_shell() {
+  npm install --quiet --global pure-prompt
+  cat <<EOF >> "/home/$USERNAME/.zshrc"
+autoload -U promptinit; promptinit
+prompt pure
+source /etc/zshrc.d/*
+EOF
+  cat <<EOF >> "/home/$USERNAME/.bashrc"
+source /etc/bashrc.d/*
+EOF
 }
 
 set_user_password() {
