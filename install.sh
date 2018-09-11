@@ -7,6 +7,8 @@
 ##
 
 # TODO: Add banners/section announcements with timestamps
+# TODO: Prompts for variables instead of vars.sh
+# TODO: Copy over public key, defaulting to id_rsa, offer to make new one?
 
 [[ -n ${TRACE:-} ]] && set -x
 set -euo pipefail
