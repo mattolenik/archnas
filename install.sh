@@ -96,7 +96,7 @@ install() {
   read -rp "Type YES to proceed, or anything else to abort: " continue
   [[ $continue != "YES" ]] && bail "Aborting installation"
 
-  echo `blue "$(figlet "Installing...")`
+  echo `blue "$(figlet "Installing...")"`
 
   wipefs -a "$system_device"
   parted "$system_device" mklabel gpt
@@ -130,7 +130,7 @@ install() {
   # Perform the part of the install that runs inside the chroot.
   cat inside-chroot.sh | arch-chroot /mnt /bin/bash
 
-  echo `green "$(figlet "...done!")`
+  echo `green "$(figlet "...done!")"`
 
   print_password_notice "/mnt/$PASSWORD_FILE"
   rm -f "/mnt/$PASSWORD_FILE"
