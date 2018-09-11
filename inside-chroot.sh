@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 trap 'echo ERROR on line $LINENO in "$(basename -- "$0")"' ERR
+HOME="/home/$USERNAME"/
+PURE_URL_PREFIX="https://github.com/sindresorhus/pure/blob/master"
 
 main() {
   setup_users
-  setup_shell
+  setup_zsh
+  setup_bash
 
   install_pip
   setup_clock
@@ -17,6 +20,8 @@ main() {
   install_yay
   install_plexpass
   #install_ups
+
+  setup_services
 
   set_user_password
 
@@ -61,8 +66,6 @@ install_yay() {
     curl -sSL $(get_github_latest_release Jguer/yay) | tar xz --strip-components=1
     mv yay /usr/bin
     mv yay.8 /usr/share/man/
-    mkdir /etc/bashrc.d
-    mkdir /etc/zshrc.d
     mv bash /etc/bashrc.d/yay
     mv zsh /etc/zshrc.d/yay
   )
@@ -98,22 +101,42 @@ get_timezone_by_ip() {
 setup_users() {
   echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
   echo "PermitRootLogin no" >> /etc/ssh/sshd_config
-  useradd -d "/home/$USERNAME" -G wheel -s "$(command -v zsh)" "$USERNAME"
-  mkdir -p "/home/$USERNAME"
-  chown -R "$USERNAME:$USERNAME" "/home/$USERNAME"
+  useradd -d "$HOME" -G wheel -s "$(command -v zsh)" "$USERNAME"
+  mkdir -p "$HOME"
+  chown -R "$USERNAME:$USERNAME" "$HOME"
   passwd -l root
 }
 
-setup_shell() {
-  npm install --quiet --global pure-prompt
-  cat <<EOF >> "/home/$USERNAME/.zshrc"
+setup_zsh() {
+  zshd="/etc/zshrc.d"
+  usr_funcs="/usr/local/share/zsh/site-functions"
+  zshd_funcs="$zshd/site-functions"
+  mkdir -p "$zshd_funcs"
+  mkdir -p "$usr_funcs"
+
+  # Install Pure, a nicer prompt for zsh.
+  wget -P "$zshd_funcs" "$PURE_URL_PREFIX/pure.zsh"
+  wget -P "$zshd_funcs" "$PURE_URL_PREFIX/async.zsh"
+  ln -s "$zshd_funcs/pure.zsh" "$usr_funcs/prompt_pure_setup"
+  ln -s "$zshd_funcs/async.zsh" "$usr_funcs/async"
+
+  # This will prefix the rc files with the contents of SHELL.
+  zshrc="$HOME/.zshrc"
+  cat << SHELL | cat - "$zshrc" | tee "$zshrc"
 autoload -U promptinit; promptinit
 prompt pure
-source /etc/zshrc.d/*
-EOF
-  cat <<EOF >> "/home/$USERNAME/.bashrc"
-source /etc/bashrc.d/*
-EOF
+source $zshd/*
+SHELL
+}
+
+setup_bash() {
+  bashd="/etc/bashrc.d"
+  bashrc="$HOME/.bashrc"
+  mkdir -p "$bashd"
+  # This will prefix the rc files with the contents of SHELL.
+  cat << SHELL | cat - "$bashrc" | tee "$bashrc"
+source $bashd/*
+SHELL
 }
 
 set_user_password() {
@@ -121,6 +144,16 @@ set_user_password() {
   echo "$USERNAME:$password" | chpasswd
   passwd --expire "$USERNAME"
   echo "$password" > "$PASSWORD_FILE"
+}
+
+setup_services() {
+  services=(
+    dhcpcd
+    nmb
+    smb
+    sshd
+  )
+  systemctl enable ${services[@]}
 }
 
 write_plex_config() {

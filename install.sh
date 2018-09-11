@@ -5,17 +5,19 @@
 #
 # No arguments are needed, guided prompts will follow.
 ##
-
 # TODO: Add banners/section announcements with timestamps
 # TODO: Prompts for variables instead of vars.sh
 # TODO: Copy over public key, defaulting to id_rsa, offer to make new one?
+# TODO: Set up SMB user and SMB shares
+# TODO: Fix broken pure prompt
+##
 
 [[ -n ${TRACE:-} ]] && set -x
 set -euo pipefail
 
 script_name="${0##*/}"
 script_noext="${script_name%.*}"
-exec > >(tee -i "${LOG_FILE:-$script_noext.log}"); exec 2>&1
+exec > >(tee -i "${LOG_FILE:=$script_noext.log}"); exec 2>&1
 
 trap 'echo ERROR on line $LINENO in "$(basename -- "$0")"' ERR
 
@@ -51,7 +53,6 @@ packages=(
   linux-lts-headers
   lm_sensors
   neovim
-  nodejs
   monit
   openssh
   python
@@ -62,7 +63,9 @@ packages=(
   samba
   snapper
   smartmontools
+  syncthing
   tmux
+  wget
   zsh
 )
 
@@ -95,11 +98,13 @@ install() {
 
   echo
   echo "`yellow NOTICE:` ArchNAS is about to be installed onto disk: `yellow $system_device`"
-  echo "Continue? This will `red destroy` any existing data."
+  echo "Continue? This will `red DESTROY` any existing data."
   read -rp "Type YES to proceed, or anything else to abort: " continue
   [[ $continue != "YES" ]] && bail "Aborting installation"
 
   cbanner $blue$bold "Installing..."
+  echo
+  echo "Output is logged to a file named `green "$LOG_FILE"`"
 
   wipefs -af "$system_device"
   parted "$system_device" mklabel gpt
