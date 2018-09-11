@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-trap 'echo ERROR on lineno $LINENO in "$(basename -- "$0")"' ERR
+trap 'echo ERROR on line $LINENO in "$(basename -- "$0")"' ERR
 
 main() {
   setup_users
@@ -59,6 +59,7 @@ install_yay() {
     cd $(mktemp -d)
     curl -sSL $(get_github_latest_release Jguer/yay) | tar xz --strip-components=1
     mv yay /usr/bin
+    mv yay.8 /usr/share/man/
     mkdir /etc/bashrc.d
     mkdir /etc/zshrc.d
     mv bash /etc/bashrc.d/yay
@@ -106,7 +107,6 @@ set_user_password() {
   local password="$(openssl rand -hex 3)"
   echo "$USERNAME:$password" | chpasswd
   passwd --expire "$USERNAME"
-  #echo "Your initial password is ${password} — you will be prompted to change it upon first login"
   echo "$password" > "$PASSWORD_FILE"
 }
 

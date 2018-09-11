@@ -17,7 +17,7 @@ script_name="${0##*/}"
 script_noext="${script_name%.*}"
 exec > >(tee -i "${LOG_FILE:-$script_noext.log}"); exec 2>&1
 
-trap 'echo ERROR on lineno $LINENO in "$(basename -- "$0")"' ERR
+trap 'echo ERROR on line $LINENO in "$(basename -- "$0")"' ERR
 
 source vars.sh
 export HOSTNAME
@@ -71,14 +71,27 @@ bail() {
   echo "$@" && exit 1
 }
 
+red="$(tput setaf 1)"
+green="$(tput setaf 2)"
+yellow="$(tput setaf 3)"
+blue="$(tput setaf 4)"
+bold="$(tput bold)"
+clr="$(tput sgr0)"
+yellow() { printf %s "${yellow}${bold}$*${clr}"; }
+green() { printf %s "${green}${bold}$*${clr}"; }
+red() { printf %s "${red}${bold}$*${clr}"; }
+blue() { printf %s "${blue}${bold}$*${clr}"; }
+
 install() {
   system_device="${1:-}"
   [[ -z $system_device ]] && bail "First argument must be device for system install"
 
   timedatectl set-ntp true
 
-  echo "NOTICE: Continue installation onto $system_device? This will destroy any existing data."
-  read -rp "Type YES to proceed, anything else to abort: " continue
+  echo
+  echo "`yellow NOTICE:` ArchNAS is about to installed onto disk: `yellow $system_device`"
+  echo "Continue? This will `red destroy` any existing data."
+  read -rp "Type YES to proceed, or anything else to abort: " continue
   [[ $continue != "YES" ]] && bail "Aborting installation"
 
   print_install_banner
@@ -104,7 +117,7 @@ install() {
   mkdir -p /mnt${ESP}
   mount "$boot_part" /mnt${ESP}
 
-  pacstrap /mnt ${packages[@]} --ignore ${packages_ignore[@]}
+  pacstrap /mnt "${packages[@]}" --ignore "${packages_ignore[@]}"
 
   # Add discard flag to enable SSD trim
   genfstab -U /mnt | sed 's/ssd/ssd,discard/' > /mnt/etc/fstab
@@ -114,57 +127,54 @@ install() {
   cat inside-chroot.sh | arch-chroot /mnt /bin/bash
 
   print_done_banner
-  print_password_notice
+  print_password_notice "/mnt/$PASSWORD_FILE"
   rm -f "/mnt/$PASSWORD_FILE"
 
   umount -R /mnt
 
-  read -rp $'Installation complete! Jot down your password and press any key to reboot\n'
+  read -rp $'Installation complete! Jot down your password and press enter to reboot\n'
+  reboot
+}
+
+get_disk_devices() {
+  lsblk -o name,type -nrd | awk '/disk$/ {print $1}'
 }
 
 print_install_banner() {
-  tput setaf 4
-  tput bold
+  printf %s $bold$blue
   cat <<'EOF'
-  _____              _          _  _  _
- |_   _|            | |        | || |(_)
-   | |   _ __   ___ | |_  __ _ | || | _  _ __    __ _
-   | |  | '_ \ / __|| __|/ _` || || || || '_ \  / _` |
-  _| |_ | | | |\__ \| |_| (_| || || || || | | || (_| | _  _  _
- |_____||_| |_||___/ \__|\__,_||_||_||_||_| |_| \__, |(_)(_)(_)
-                                                 __/ |
-                                                |___/
-
+ ___
+  |  ._   _ _|_  _. | | o ._   _
+ _|_ | | _>  |_ (_| | | | | | (_| o o o
+                               _|
 EOF
-  tput sgr0
+  printf %s $clr
 }
 
 print_done_banner() {
-  tput setaf 3
-  tput bold
+  printf %s $bold$green
   cat <<'EOF'
-  _____                       _
- |  __ \                     | |
- | |  | |  ___   _ __    ___ | |
- | |  | | / _ \ | '_ \  / _ \| |
- | |__| || (_) || | | ||  __/|_|
- |_____/  \___/ |_| |_| \___|(_)
+  _
+ | \  _  ._   _  |
+ |_/ (_) | | (/_ o
 
 EOF
-  tput sgr0
+  printf $clr
 }
 
 print_password_notice() {
+  local pass_file="$1"
+  printf %s $bold$red
+  cat << 'EOF'
+  __           _   ___    ___  __    _       __  __        _   _   _
+ (_   /\ \  / |_    | |_|  |  (_    |_) /\  (_  (_ \    / / \ |_) | \ |
+ __) /--\ \/  |_    | | | _|_ __)   |  /--\ __) __) \/\/  \_/ | \ |_/ o
+EOF
   cat << EOF
-$(tput setaf 1)
-╔═╗╔═╗╦  ╦╔═╗  ╔╦╗╦ ╦╦╔═╗  ╔═╗╔═╗╔═╗╔═╗╦ ╦╔═╗╦═╗╔╦╗  ╦
-╚═╗╠═╣╚╗╔╝║╣    ║ ╠═╣║╚═╗  ╠═╝╠═╣╚═╗╚═╗║║║║ ║╠╦╝ ║║  ║
-╚═╝╩ ╩ ╚╝ ╚═╝   ╩ ╩ ╩╩╚═╝  ╩  ╩ ╩╚═╝╚═╝╚╩╝╚═╝╩╚══╩╝  o
-$(tput sgr0)
-Your $(tput setaf 3)initial password$(tput sgr0) for user $USERNAME: $(tput setaf 1)$(cat "/mnt/$PASSWORD_FILE")$(tput sgr0)
+Your `red "temporary password"` for user $USERNAME is: `red "$(< "$pass_file")"`
+You will be prompted to choose a new password upon first login.
 
 EOF
 }
 
 install "$@"
-831b3c
