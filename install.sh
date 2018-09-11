@@ -96,7 +96,7 @@ install() {
   read -rp "Type YES to proceed, or anything else to abort: " continue
   [[ $continue != "YES" ]] && bail "Aborting installation"
 
-  echo `blue "$(figlet "Installing...")"`
+  cbanner $blue$bold "Installing..."
 
   wipefs -a "$system_device"
   parted "$system_device" mklabel gpt
@@ -130,7 +130,7 @@ install() {
   # Perform the part of the install that runs inside the chroot.
   cat inside-chroot.sh | arch-chroot /mnt /bin/bash
 
-  echo `green "$(figlet "...done!")"`
+  cbanner $green$bold "...done!"
 
   print_password_notice "/mnt/$PASSWORD_FILE"
   rm -f "/mnt/$PASSWORD_FILE"
@@ -139,6 +139,14 @@ install() {
 
   read -rp $'Installation complete! Jot down your password and press enter to reboot.\n'
   reboot
+}
+
+# Colored banner, first arg should be character(s) from tput
+cbanner() {
+  printf %s $1
+  shift
+  figlet "$*"
+  printf %s $clr
 }
 
 # Find available, writeable disks for install
@@ -163,7 +171,9 @@ select_disk() {
 
 print_password_notice() {
   local pass_file="$1"
-  echo `red "$(figlet -f small "SAVE THIS PASSWORD!")"`
+  printf %s $red$bold
+  figlet -f small "SAVE THIS PASSWORD!"
+  printf %s $clr
   cat << EOF
 Your `red "temporary password"` for user $USERNAME is: `red "$(< "$pass_file")"`
 You will be prompted to choose a new password upon first login.
@@ -179,7 +189,7 @@ if ! command -v "${prereqs[0]}" $>/dev/null; then
   pacman --noconfirm -Sy ${prereqs[@]}
   clear
   sleep 1
-  echo `blue "$(figlet "ArchNAS")"`
+  echo -e `blue "$(figlet "ArchNAS")"`
 fi
 
 # TODO: redo tmux?
