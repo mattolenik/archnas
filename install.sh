@@ -89,12 +89,11 @@ install() {
   timedatectl set-ntp true
 
   echo
-  echo "`yellow NOTICE:` ArchNAS is about to installed onto disk: `yellow $system_device`"
+  echo "`yellow NOTICE:` ArchNAS is about to be installed onto disk: `yellow $system_device`"
   echo "Continue? This will `red destroy` any existing data."
   read -rp "Type YES to proceed, or anything else to abort: " continue
   [[ $continue != "YES" ]] && bail "Aborting installation"
 
-  print_install_banner
   echo `blue "$(figlet "Installing...")`
 
   wipefs -a "$system_device"
@@ -142,14 +141,22 @@ install() {
 
 # Find available, writeable disks for install
 list_disks() {
-  lsblk -o type,ro,name,size,model -nrd | awk '/^disk 0/ {print substr($0, index($0,$3))}' | sed 's/\\x20/ /g' | sort
+  lsblk -o type,ro,name,size,model -nrd | \
+    awk '/^disk 0/ {printf "/dev/%s %s %s\n", $3, $4, $5}' | \
+    sort | \
+    column -t | \
+    sed -E -e 's/\\x20/ /g' -e 's/[ ]+$//'
 }
 
+# Show a menu selection of disks and return the corresponding device file.
 select_disk() {
-  echo "Choose a disk to auto-partition. Its data will be lost during install."
+  echo "Choose a disk to auto-partition. Any existing data will be lost." 1>&2
+  IFS=$'\n'
   select disk in $(list_disks); do
-    echo "$disk" | awk '{print "/dev/"$1}'
+    echo "$disk" | awk '{print $1}'
+    break
   done
+  unset IFS
 }
 
 print_password_notice() {
@@ -166,7 +173,11 @@ prereqs=(
   figlet
 )
 if ! command -v "${prereqs[0]}" $>/dev/null; then
-  pacman -Sy ${prereqs[@]}
+  echo `blue "Installing prereqs..."`
+  pacman --noconfirm -Sy ${prereqs[@]}
+  clear
+  sleep 1
+  echo `blue "$(figlet "ArchNAS")"`
 fi
 
 # TODO: redo tmux?
