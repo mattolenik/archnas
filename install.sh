@@ -22,6 +22,7 @@ exec > >(tee -i "${LOG_FILE:=${script_name%.*}.log}"); exec 2>&1
 
 trap 'echo ERROR on line $LINENO in $script_name' ERR
 
+unset HOSTNAME
 source vars.sh
 export USERNAME=${USERNAME:-nasuser}
 export HOSTNAME=${HOSTNAME:-archnas-$((RANDOM % 100))}
@@ -93,12 +94,12 @@ blue() { printf %s "${blue}${bold}$*${clr}"; }
 bold() { printf %s "${bold}$*${clr}"; }
 
 install() {
-  system_device="$(select_disk)"
+  select_disk "system_device"
 
   timedatectl set-ntp true
 
   echo
-  echo "`yellow NOTICE:` ArchNAS is about to be installed onto disk: `yellow $system_device`"
+  echo "`yellow NOTICE:` ArchNAS is about to be installed onto disk: `yellow "$system_device"`"
   echo "Continue? This will `red DESTROY` any existing data."
   read -rp "Type YES to proceed, or anything else to abort: " continue
   [[ $continue != "YES" ]] && bail "Aborting installation"
@@ -163,10 +164,11 @@ cbanner() {
   printf %s $clr
 }
 
-# Find available, writeable disks for install
+# Find available, writeable disks for install. It will print
+# the following columns: name, size, model, label
 list_disks() {
-  lsblk -o type,ro,name,size,model -nrd | \
-    awk '/^disk 0/ {printf "/dev/%s %s %s\n", $3, $4, $5}' | \
+  lsblk -o type,ro,name,size,model,label -nrd | \
+    awk '/^disk 0/ {printf "/dev/%s %s %s %s\n", $3, $4, $5, $6}' | \
     sort | \
     column -t | \
     sed -E -e 's/\\x20/ /g' -e 's/[ ]+$//'
@@ -174,16 +176,23 @@ list_disks() {
 
 # Show a menu selection of disks and return the corresponding device file.
 select_disk() {
-  echo "Choose a disk to auto-partition. Any existing data will be lost. Press ctrl-c to abort."
-  echo
+  out_var="$1"
+  echo "Choose a disk to auto-partition. Any existing data will be lost. Press CTRL-C to abort."
+  PS3=$'\nChoose disk #) '
   IFS=$'\n'
-  # TODO: Make disks array so that count can be gotten, use that count for range check
-  select disk in $(list_disks); do
-    if [[ $REPLY ]]
-    echo "$disk" | awk '{print $1}'
-    break
+  trap 'unset PS3; unset IFS' RETURN
+
+  disks=($(list_disks))
+  select disk in ${disks[@]}; do
+    # If input is a number and within the range of options
+    if [[ $REPLY =~ ^[0-9]$ ]] && (( REPLY > 0 )) && (( REPLY <= ${#disks[@]} )); then
+      set_cmd="$out_var="$(echo "$disk" | awk '{print $1}')""
+      eval "$set_cmd"
+      break
+    else
+      echo "That's not a valid option, please choose again."
+    fi
   done
-  unset IFS
 }
 
 print_password_notice() {
