@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
-trap 'echo ERROR on line $LINENO in "$(basename -- "$0")"' ERR
-HOME="/home/$USERNAME"/
-PURE_URL_PREFIX="https://github.com/sindresorhus/pure/blob/master"
+trap 'echo ERROR on line $LINENO in "$(basename "$0")"' ERR
+HOME="/home/$USERNAME"
+PURE_URL_PREFIX="https://raw.githubusercontent.com/sindresorhus/pure/master"
 
 main() {
   setup_users
   setup_zsh
   setup_bash
+  chown -R "$USERNAME:$USERNAME" "$HOME"
 
   install_pip
   setup_clock
@@ -30,9 +31,11 @@ main() {
 
 cleanup() {
   rm -rf /tmp/*
-  find /var/log -type f | xargs rm -f
-  find /root /home -type f -name .bash_history | xargs rm -f
+  rm -rf /var/log/*
+  # Remove bash and zsh history from all users
+  find /root /home -type f \( -name .bash_history -o -name .zsh_history \) | xargs rm -f
 }
+
 
 get_github_latest_release() {
   curl -s https://api.github.com/repos/$1/releases/latest | jq -r '.assets[].browser_download_url'
@@ -108,34 +111,41 @@ setup_users() {
 }
 
 setup_zsh() {
-  zshd="/etc/zshrc.d"
-  usr_funcs="/usr/local/share/zsh/site-functions"
-  zshd_funcs="$zshd/site-functions"
-  mkdir -p "$zshd_funcs"
-  mkdir -p "$usr_funcs"
+  zshrc="$HOME/.zshrc"
+  zshrc_dir="/etc/zshrc.d"
+  zfuncs_dir="$HOME/.config/zsh/site-functions"
+  pure_dir="$HOME/.config/zsh/pure-prompt"
+  mkdir -p "$zshrc_dir"
+  mkdir -p "$zfuncs_dir"
+  mkdir -p "$pure_dir"
 
   # Install Pure, a nicer prompt for zsh.
-  wget -P "$zshd_funcs" "$PURE_URL_PREFIX/pure.zsh"
-  wget -P "$zshd_funcs" "$PURE_URL_PREFIX/async.zsh"
-  ln -s "$zshd_funcs/pure.zsh" "$usr_funcs/prompt_pure_setup"
-  ln -s "$zshd_funcs/async.zsh" "$usr_funcs/async"
+  curl -sSLo "$pure_dir/pure.zsh" "$PURE_URL_PREFIX/pure.zsh"
+  curl -sSLo "$pure_dir/async.zsh" "$PURE_URL_PREFIX/async.zsh"
+  ln -s "$pure_dir/pure.zsh" "$zfuncs_dir/prompt_pure_setup"
+  ln -s "$pure_dir/async.zsh" "$zfuncs_dir/async"
 
   # This will prefix the rc files with the contents of SHELL.
-  zshrc="$HOME/.zshrc"
   cat << SHELL | cat - "$zshrc" | tee "$zshrc"
+# Setup Pure prompt, from $(echo $PURE_URL_PREFIX | awk -F/ '{printf "https://github.com/%s/%s\n", $4, $5}')
+fpath=( "$zfuncs_dir" \$fpath )
 autoload -U promptinit; promptinit
 prompt pure
-source $zshd/*
+
+# Source all files in $zshrc_dir
+find "$zshrc_dir" -type f -maxdepth 1 -exec source {} \;
 SHELL
 }
 
 setup_bash() {
-  bashd="/etc/bashrc.d"
+  bashrc_dir="/etc/bashrc.d"
   bashrc="$HOME/.bashrc"
-  mkdir -p "$bashd"
+  touch "$bashrc"
+  mkdir -p "$bashrc_dir"
   # This will prefix the rc files with the contents of SHELL.
   cat << SHELL | cat - "$bashrc" | tee "$bashrc"
-source $bashd/*
+# Source all files in $bashrc_dir
+find "$bashrc_dir" -type f -maxdepth 1 -exec source {} \;
 SHELL
 }
 

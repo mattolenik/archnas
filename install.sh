@@ -10,16 +10,17 @@
 # TODO: Copy over public key, defaulting to id_rsa, offer to make new one?
 # TODO: Set up SMB user and SMB shares
 # TODO: Fix broken pure prompt
+# TODO: Encrypt root
 ##
 
 [[ -n ${TRACE:-} ]] && set -x
 set -euo pipefail
+[[ $(uname -r) != *ARCH* ]] && echo "This script can only run on Arch Linux!" && exit 1
 
 script_name="${0##*/}"
-script_noext="${script_name%.*}"
-exec > >(tee -i "${LOG_FILE:=$script_noext.log}"); exec 2>&1
+exec > >(tee -i "${LOG_FILE:=${script_name%.*}.log}"); exec 2>&1
 
-trap 'echo ERROR on line $LINENO in "$(basename -- "$0")"' ERR
+trap 'echo ERROR on line $LINENO in $script_name' ERR
 
 source vars.sh
 export USERNAME=${USERNAME:-nasuser}
@@ -173,9 +174,12 @@ list_disks() {
 
 # Show a menu selection of disks and return the corresponding device file.
 select_disk() {
-  echo "Choose a disk to auto-partition. Any existing data will be lost." 1>&2
+  echo "Choose a disk to auto-partition. Any existing data will be lost. Press ctrl-c to abort."
+  echo
   IFS=$'\n'
+  # TODO: Make disks array so that count can be gotten, use that count for range check
   select disk in $(list_disks); do
+    if [[ $REPLY ]]
     echo "$disk" | awk '{print $1}'
     break
   done
