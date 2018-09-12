@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-trap 'echo ERROR on line $LINENO in "$(basename "$0")"' ERR
+trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
 HOME="/home/$USERNAME"
 PURE_URL_PREFIX="https://raw.githubusercontent.com/sindresorhus/pure/master"
 
@@ -13,7 +13,7 @@ main() {
   install_pip
   setup_clock
   set_locale
-  set_hostname "$HOSTNAME" "$DOMAIN"
+  set_hostname "$HOST_NAME" "$DOMAIN"
 
   grub-install --target=x86_64-efi --efi-directory=$ESP --bootloader-id=GRUB
   grub-mkconfig -o /boot/grub/grub.cfg

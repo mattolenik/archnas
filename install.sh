@@ -9,23 +9,22 @@
 # TODO: Prompts for variables instead of vars.sh
 # TODO: Copy over public key, defaulting to id_rsa, offer to make new one?
 # TODO: Set up SMB user and SMB shares
-# TODO: Fix broken pure prompt
-# TODO: Encrypt root
+# TODO: Add prompts for options in addition to vars
 ##
 
-[[ -n ${TRACE:-} ]] && set -x
 set -euo pipefail
+[[ -n ${TRACE:-} ]] && set -x
 [[ $(uname -r) != *ARCH* ]] && echo "This script can only run on Arch Linux!" && exit 1
 
 script_name="${0##*/}"
+#exec > >(tee -i "${LOG_FILE:=$script_name.log}"); exec 2>&1
 exec > >(tee -i "${LOG_FILE:=${script_name%.*}.log}"); exec 2>&1
 
 trap 'echo ERROR on line $LINENO in $script_name' ERR
 
-unset HOSTNAME
 source vars.sh
 export USERNAME=${USERNAME:-nasuser}
-export HOSTNAME=${HOSTNAME:-archnas-$((RANDOM % 100))}
+export HOST_NAME=${HOST_NAME:-archnas-$((RANDOM % 100))}
 export DOMAIN=${DOMAIN:-local}
 export TIMEZONE=${TIMEZONE:-auto}
 ROOT_LABEL=${ROOT_LABEL:-system}
@@ -43,6 +42,7 @@ packages=(
   base
   base-devel
   btrfs-progs
+  bind-tools
   efibootmgr
   git
   grub
@@ -129,7 +129,6 @@ install() {
 
   # Always mount root partition before next steps
   mount "$root_part" /mnt
-  trap 'umount -R /mnt' ERR
 
   mkdir -p /mnt${ESP}
   mount "$boot_part" /mnt${ESP}
@@ -165,10 +164,10 @@ cbanner() {
 }
 
 # Find available, writeable disks for install. It will print
-# the following columns: name, size, model, label
+# the following columns: name, size, model
 list_disks() {
-  lsblk -o type,ro,name,size,model,label -nrd | \
-    awk '/^disk 0/ {printf "/dev/%s %s %s %s\n", $3, $4, $5, $6}' | \
+  lsblk -o type,ro,name,size,model -nrd | \
+    awk '/^disk 0/ {printf "/dev/%s %s %s\n", $3, $4, $5}' | \
     sort | \
     column -t | \
     sed -E -e 's/\\x20/ /g' -e 's/[ ]+$//'
