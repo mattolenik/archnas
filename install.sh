@@ -10,6 +10,9 @@
 # TODO: Copy over public key, defaulting to id_rsa, offer to make new one?
 # TODO: Set up SMB user and SMB shares
 # TODO: Add prompts for options in addition to vars
+# TODO: Define service list in outer script
+# TODO: Setup ufw
+# TODO: Add a post-install fix or TODO log (e.g. timezone lookup failed, FYI it's UTC)
 ##
 
 set -euo pipefail
@@ -17,16 +20,15 @@ set -euo pipefail
 [[ $(uname -r) != *ARCH* ]] && echo "This script can only run on Arch Linux!" && exit 1
 
 script_name="${0##*/}"
-#exec > >(tee -i "${LOG_FILE:=$script_name.log}"); exec 2>&1
 exec > >(tee -i "${LOG_FILE:=${script_name%.*}.log}"); exec 2>&1
-
 trap 'echo ERROR on line $LINENO in $script_name' ERR
+start_time=$(date +%s)
 
 source vars.sh
 export USERNAME=${USERNAME:-nasuser}
-export HOST_NAME=${HOST_NAME:-archnas-$((RANDOM % 100))}
 export DOMAIN=${DOMAIN:-local}
 export TIMEZONE=${TIMEZONE:-auto}
+export HOST_NAME=${HOST_NAME:-archnas-$((RANDOM % 100))}
 ROOT_LABEL=${ROOT_LABEL:-system}
 BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
 SWAP_PART_SIZE=${SWAP_PART_SIZE:-4096}
@@ -67,6 +69,7 @@ packages=(
   smartmontools
   syncthing
   tmux
+  ufw
   wget
   zsh
 )
@@ -145,6 +148,9 @@ install() {
   cat inside-chroot.sh | arch-chroot /mnt /bin/bash
 
   cbanner $green$bold "...done!"
+
+  elapsed=$(( start_time - $(date +%s) ))
+  echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60)) seconds"
 
   print_password_notice "/mnt/$PASSWORD_FILE"
   rm -f "/mnt/$PASSWORD_FILE"
