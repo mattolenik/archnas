@@ -13,6 +13,7 @@
 # TODO: Define service list in outer script
 # TODO: Setup ufw
 # TODO: Add a post-install fix or TODO log (e.g. timezone lookup failed, FYI it's UTC)
+# TODO: Run services in Docker? Rockstor-like plugins but much simpler?
 ##
 
 set -euo pipefail

@@ -76,9 +76,9 @@ install_yay() {
 
 setup_clock() {
   [[ $TIMEZONE == auto ]] && export TIMEZONE="$(get_timezone_by_ip "$(get_external_ip)")"
+  echo "Set timezone to $TIMEZONE"
   ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
   hwclock --systohc
-  echo "Set timezone to $TIMEZONE"
 }
 
 set_locale() {
@@ -101,7 +101,6 @@ get_external_ip() {
 get_timezone_by_ip() {
   # Try to resolve timezone by geolocation of IP, default to UTC in case of failure
   curl --max-time 30 --fail --silent "https://freegeoip.app/json/$1" 2>/dev/null | jq -r .time_zone || echo "UTC"
-  echo "ERROR: Failed to resolve timezone through IP address geolocation"
 }
 
 setup_users() {
