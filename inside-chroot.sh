@@ -2,7 +2,6 @@
 set -euo pipefail
 trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
 HOME="/home/$USERNAME"
-PURE_URL_PREFIX="https://raw.githubusercontent.com/sindresorhus/pure/master"
 
 main() {
   setup_users
@@ -115,27 +114,18 @@ setup_users() {
 setup_zsh() {
   zshrc="$HOME/.zshrc"
   zshrc_dir="/etc/zshrc.d"
-  zfuncs_dir="$HOME/.config/zsh/site-functions"
-  pure_dir="$HOME/.config/zsh/pure-prompt"
+  touch "$zshrc"
   mkdir -p "$zshrc_dir"
-  mkdir -p "$zfuncs_dir"
-  mkdir -p "$pure_dir"
 
-  # Install Pure, a nicer prompt for zsh.
-  curl -sSLo "$pure_dir/pure.zsh" "$PURE_URL_PREFIX/pure.zsh"
-  curl -sSLo "$pure_dir/async.zsh" "$PURE_URL_PREFIX/async.zsh"
-  ln -s "$pure_dir/pure.zsh" "$zfuncs_dir/prompt_pure_setup"
-  ln -s "$pure_dir/async.zsh" "$zfuncs_dir/async"
+  # Add a better default shell with directory and exit status
+  cat << 'SHELL' >> /etc/zprofile
+export PS1='%n@%m %~'$'\n''%(?..%? )%(!.#.$) '
+SHELL
 
   # This will prefix the rc files with the contents of SHELL.
   cat << SHELL | cat - "$zshrc" | tee "$zshrc"
-# Setup Pure prompt, from $(echo $PURE_URL_PREFIX | awk -F/ '{printf "https://github.com/%s/%s\n", $4, $5}')
-fpath=( "$zfuncs_dir" \$fpath )
-autoload -U promptinit; promptinit
-prompt pure
-
 # Source all files in $zshrc_dir
-find "$zshrc_dir" -type f -maxdepth 1 -exec source {} \;
+find "$zshrc_dir" -maxdepth 1 -type f -exec source {} \;
 SHELL
 }
 
@@ -144,6 +134,12 @@ setup_bash() {
   bashrc="$HOME/.bashrc"
   touch "$bashrc"
   mkdir -p "$bashrc_dir"
+
+  # Add a better default shell with directory and exit status
+  cat << 'SHELL' >> /etc/profile
+export PS1="\u@\h \w\n\$? \\$ \[$(tput sgr0)\]"
+SHELL
+
   # This will prefix the rc files with the contents of SHELL.
   cat << SHELL | cat - "$bashrc" | tee "$bashrc"
 # Source all files in $bashrc_dir
