@@ -177,7 +177,7 @@ select_disk() {
 set_temp_password() {
   # Use a random 4 character string as the initial password
   read -r "$1" < <(openssl rand -hex 2)
-  eval "printf '%s:%s' $USERNAME \$$1" | chpasswd --root /mnt
+  echo "$USERNAME:${!1}" | chpasswd --root /mnt
   passwd --quiet --root /mnt --expire "$USERNAME"
 }
 

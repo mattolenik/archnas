@@ -89,17 +89,22 @@ set_hostname() {
 }
 
 get_external_ip() {
-  dig +short myip.opendns.com @resolver1.opendns.com
+  local output
+  output=$(dig +short myip.opendns.com @resolver1.opendns.com)
+  if (( $? != 0 )); then
+    echo NULL
+  fi
 }
 
 get_timezone_by_ip() {
+  [[ $1 == NULL ]] && echo UTC && return
   # Try to resolve timezone by geolocation of IP, default to UTC in case of failure
-  curl --max-time 30 --fail --silent "https://freegeoip.app/json/$1" 2>/dev/null | jq -r .time_zone || echo "UTC"
+  curl --max-time 30 --fail --silent "https://freegeoip.app/json/$1" 2>/dev/null | jq -r .time_zone || echo UTC
 }
 
 setup_users() {
   echo "%wheel ALL=(ALL) ALL"   > /etc/sudoers.d/wheel
-  echo "Defaults lecture never" > /etc/sudoers.d/disable-lecture
+  echo "Defaults lecture = never" > /etc/sudoers.d/disable-lecture
   echo "PermitRootLogin no" >> /etc/ssh/sshd_config
   useradd -d "$HOME" -G wheel -s "$(command -v zsh)" "$USERNAME"
   mkdir -p "$HOME"
@@ -113,16 +118,19 @@ setup_zsh() {
   mkdir -p "$zshrc_dir"
 
   # Add a better default shell with directory and exit status
-  cat << 'SHELL' >> /etc/zprofile
+  cat << 'SHELL' >> /etc/zsh/zprofile
 export PS1='%n@%m %~'$'\n''%(?..%? )%(!.#.$) '
 SHELL
 
   # This will prefix the rc files with the contents of SHELL
   cat << SHELL | cat - "$zshrc" | tee "$zshrc"
-# Source all files in $zshrc_dir
-for f in "$zshrc_dir/*"; do
-  [[ -f \$f ]] && source "\$f"
-done
+# Uncomment to automatically source all files in $zshrc_dir
+#for f in "$zshrc_dir/*"; do
+#  [[ -f \$f ]] && source "\$f"
+#done
+#
+# Or a source a specific file
+# source $bashrc_dir/myfile
 SHELL
 }
 
@@ -139,11 +147,13 @@ SHELL
 
   # This will prefix the rc files with the contents of SHELL.
   cat << SHELL | cat - "$bashrc" | tee "$bashrc"
-# Source all files in $bashrc_dir
-for f in "$bashrc_dir/*"; do
-  [[ -f \$f ]] && source "\$f"
-done
-
+# Uncomment to automatically source all files in $bashrc_dir
+#for f in "$bashrc_dir/*"; do
+#  [[ -f \$f ]] && source "\$f"
+#done
+#
+# Or a source a specific file
+# source $bashrc_dir/myfile
 SHELL
 }
 
