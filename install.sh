@@ -81,11 +81,9 @@ bail() {
 
 red="$(tput setaf 1)"
 green="$(tput setaf 2)"
-yellow="$(tput setaf 3)"
 blue="$(tput setaf 4)"
 bold="$(tput bold)"
 clr="$(tput sgr0)"
-yellow() { printf %s "${yellow}${bold}$*${clr}"; }
 green() { printf %s "${green}${bold}$*${clr}"; }
 red() { printf %s "${red}${bold}$*${clr}"; }
 blue() { printf %s "${blue}${bold}$*${clr}"; }
@@ -97,7 +95,7 @@ install() {
   timedatectl set-ntp true
 
   echo
-  echo "`yellow NOTICE:` ArchNAS is about to be installed onto disk: `yellow "$system_device"`"
+  echo "`red NOTICE:` ArchNAS is about to be installed onto disk: `red "$system_device"`"
   echo "Continue? This will `red DESTROY` any existing data."
   read -rp "Type YES to proceed, or anything else to abort: " continue
   [[ $continue != "YES" ]] && bail "Aborting installation"
