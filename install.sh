@@ -27,6 +27,7 @@ exec > >(tee -i "$LOG_FILE"); exec 2>&1
 trap 'echo ERROR on line $LINENO in $script_name' ERR
 start_time="$(date +%s)"
 
+source utils.sh
 source vars.sh
 export USERNAME=${USERNAME:-nasuser}
 export HOST_NAME=${HOST_NAME:-archnas}
@@ -76,20 +77,6 @@ packages=(
   zsh
 )
 
-bail() {
-  echo "$@" && exit 1
-}
-
-red="$(tput setaf 1)"
-green="$(tput setaf 2)"
-blue="$(tput setaf 4)"
-bold="$(tput bold)"
-clr="$(tput sgr0)"
-green() { printf %s "${green}${bold}$*${clr}"; }
-red() { printf %s "${red}${bold}$*${clr}"; }
-blue() { printf %s "${blue}${bold}$*${clr}"; }
-bold() { printf %s "${bold}$*${clr}"; }
-
 install() {
   select_disk system_device
 
@@ -132,11 +119,9 @@ install() {
 
   pacstrap /mnt "${packages[@]}"
 
-  # Add discard flag to enable SSD trim.
-  genfstab -U /mnt | sed 's/ssd/ssd,discard/' > /mnt/etc/fstab
-
-  # Print out fstab for logging purposes.
-  cat /mnt/etc/fstab
+  # Add discard flag to enable SSD trim. Tee is used to echo the contents to
+  # the screen for debugging.
+  genfstab -U /mnt | sed 's/ssd/ssd,discard/' | tee /mnt/etc/fstab
 
   # Perform the part of the install that runs inside the chroot.
   arch-chroot /mnt /bin/bash < inside-chroot.sh
@@ -153,14 +138,6 @@ install() {
 
   read -rp $'Installation complete! Jot down your password and press enter to reboot.\n'
   reboot
-}
-
-# Colored banner, first arg should be character(s) from tput
-cbanner() {
-  printf %s $1
-  shift
-  figlet "$*"
-  printf %s $clr
 }
 
 # Find available, writeable disks for install. It will print
@@ -204,6 +181,8 @@ set_temp_password() {
   passwd --quiet --root /mnt --expire "$USERNAME"
 }
 
+
+# Print a banner to notify the user of their temporary password.
 print_password_notice() {
   printf %s $red$bold
   figlet -f small "Password NOTICE"
@@ -219,6 +198,7 @@ EOF
 prereqs=(
   figlet
 )
+
 if ! command -v "${prereqs[0]}" $>/dev/null; then
   echo `blue "Installing prereqs..."`
   pacman --noconfirm -Syq ${prereqs[@]}
