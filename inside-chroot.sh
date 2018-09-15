@@ -7,7 +7,6 @@ main() {
   setup_users
   setup_zsh
   setup_bash
-  chown -R "$USERNAME:$USERNAME" "$HOME"
 
   install_pip
   setup_clock
@@ -23,7 +22,7 @@ main() {
 
   setup_services
 
-  set_user_password
+  chown -R "$USERNAME:$USERNAME" "$HOME"
 
   cleanup
 }
@@ -83,6 +82,7 @@ setup_clock() {
 set_locale() {
   echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen
   echo 'LANG=en_US.UTF-8' > /etc/locale.conf
+  echo 'LC_ALL=en_US.UTF-8' > /etc/locale.conf
   locale-gen
 }
 
@@ -122,10 +122,12 @@ setup_zsh() {
 export PS1='%n@%m %~'$'\n''%(?..%? )%(!.#.$) '
 SHELL
 
-  # This will prefix the rc files with the contents of SHELL.
+  # This will prefix the rc files with the contents of SHELL
   cat << SHELL | cat - "$zshrc" | tee "$zshrc"
 # Source all files in $zshrc_dir
-find "$zshrc_dir" -maxdepth 1 -type f -exec source {} \;
+for f in "$zshrc_dir/*"; do
+  [[ -f \$f ]] && source "\$f"
+done
 SHELL
 }
 
@@ -136,22 +138,18 @@ setup_bash() {
   mkdir -p "$bashrc_dir"
 
   # Add a better default shell with directory and exit status
-  cat << 'SHELL' >> /etc/profile
+  cat << 'SHELL' >> /etc/bash.bashrc
 export PS1="\u@\h \w\n\$? \\$ \[$(tput sgr0)\]"
 SHELL
 
   # This will prefix the rc files with the contents of SHELL.
   cat << SHELL | cat - "$bashrc" | tee "$bashrc"
 # Source all files in $bashrc_dir
-find "$bashrc_dir" -type f -maxdepth 1 -exec source {} \;
-SHELL
-}
+for f in "$bashrc_dir/*"; do
+  [[ -f \$f ]] && source "\$f"
+done
 
-set_user_password() {
-  local password="$(openssl rand -hex 3)"
-  echo "$USERNAME:$password" | chpasswd
-  passwd --expire "$USERNAME"
-  echo "$password" > "$PASSWORD_FILE"
+SHELL
 }
 
 setup_services() {

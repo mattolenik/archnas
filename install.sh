@@ -14,6 +14,7 @@
 # TODO: Setup ufw
 # TODO: Add a post-install fix or TODO log (e.g. timezone lookup failed, FYI it's UTC)
 # TODO: Run services in Docker? Rockstor-like plugins but much simpler?
+# TODO: Figure out the device busy thing that occurs on second run of this script
 ##
 
 set -euo pipefail
@@ -21,25 +22,22 @@ set -euo pipefail
 [[ $(uname -r) != *ARCH* ]] && echo "This script can only run on Arch Linux!" && exit 1
 
 script_name="${0##*/}"
-exec > >(tee -i "${LOG_FILE:=${script_name%.*}.log}"); exec 2>&1
+LOG_FILE="${LOG_FILE:-${script_name%.*}.log}"
+exec > >(tee -i "$LOG_FILE"); exec 2>&1
 trap 'echo ERROR on line $LINENO in $script_name' ERR
-start_time=$(date +%s)
+start_time="$(date +%s)"
 
 source vars.sh
 export USERNAME=${USERNAME:-nasuser}
+export HOST_NAME=${HOST_NAME:-archnas}
 export DOMAIN=${DOMAIN:-local}
 export TIMEZONE=${TIMEZONE:-auto}
-export HOST_NAME=${HOST_NAME:-archnas-$((RANDOM % 100))}
 ROOT_LABEL=${ROOT_LABEL:-system}
 BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
-SWAP_PART_SIZE=${SWAP_PART_SIZE:-4096}
+SWAP_PART_SIZE=${SWAP_PART_SIZE:-8192}
 
 # UEFI system partition location
 export ESP=${ESP:-/boot}
-
-# The chroot'd step outputs a temp password for the user in this location,
-# which is then read and printed out by the installer at the end.
-export PASSWORD_FILE=/userpassword
 
 packages=(
   base
@@ -49,21 +47,23 @@ packages=(
   efibootmgr
   git
   grub
+  htop
   intel-ucode
   jq
   libva-intel-driver
   libvdpau-va-gl
   libutil-linux
-  linux-lts
-  linux-lts-headers
   lm_sensors
   neovim
+  netdata
   monit
   openssh
   python
   python-pip
   python2
   python2-pip
+  ranger
+  rsync
   sudo
   samba
   snapper
@@ -74,12 +74,6 @@ packages=(
   wget
   zsh
 )
-
-packages_ignore=(
-  linux
-  linux-headers
-)
-
 
 bail() {
   echo "$@" && exit 1
@@ -98,7 +92,7 @@ blue() { printf %s "${blue}${bold}$*${clr}"; }
 bold() { printf %s "${bold}$*${clr}"; }
 
 install() {
-  select_disk "system_device"
+  select_disk system_device
 
   timedatectl set-ntp true
 
@@ -108,7 +102,7 @@ install() {
   read -rp "Type YES to proceed, or anything else to abort: " continue
   [[ $continue != "YES" ]] && bail "Aborting installation"
 
-  cbanner $blue$bold "Installing..."
+  cbanner $green$bold "Installing..."
   echo
   echo "Output is logged to a file named `green "$LOG_FILE"`"
 
@@ -137,7 +131,7 @@ install() {
   mkdir -p /mnt${ESP}
   mount "$boot_part" /mnt${ESP}
 
-  pacstrap /mnt "${packages[@]}" --ignore "${packages_ignore[@]}"
+  pacstrap /mnt "${packages[@]}"
 
   # Add discard flag to enable SSD trim.
   genfstab -U /mnt | sed 's/ssd/ssd,discard/' > /mnt/etc/fstab
@@ -146,15 +140,15 @@ install() {
   cat /mnt/etc/fstab
 
   # Perform the part of the install that runs inside the chroot.
-  cat inside-chroot.sh | arch-chroot /mnt /bin/bash
+  arch-chroot /mnt /bin/bash < inside-chroot.sh
 
   cbanner $green$bold "...done!"
 
-  elapsed=$(( start_time - $(date +%s) ))
+  local elapsed=$(( $(date +%s) - start_time ))
   echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60)) seconds"
 
-  print_password_notice "/mnt/$PASSWORD_FILE"
-  rm -f "/mnt/$PASSWORD_FILE"
+  set_temp_password temp_password
+  print_password_notice
 
   umount -R /mnt
 
@@ -181,19 +175,19 @@ list_disks() {
 }
 
 # Show a menu selection of disks and return the corresponding device file.
+# $1 - out variable that will store the result
 select_disk() {
-  out_var="$1"
   echo "Choose a disk to auto-partition. Any existing data will be lost. Press CTRL-C to abort."
   PS3=$'\nChoose disk #) '
   IFS=$'\n'
   trap 'unset PS3; unset IFS' RETURN
 
-  disks=($(list_disks))
+  local disks
+  mapfile -t disks < <(list_disks)
   select disk in ${disks[@]}; do
     # If input is a number and within the range of options
     if [[ $REPLY =~ ^[0-9]$ ]] && (( REPLY > 0 )) && (( REPLY <= ${#disks[@]} )); then
-      set_cmd="$out_var="$(echo "$disk" | awk '{print $1}')""
-      eval "$set_cmd"
+      read -r "$1" < <(echo "$disk" | awk '{print $1}')
       break
     else
       echo "That's not a valid option, please choose again."
@@ -201,14 +195,24 @@ select_disk() {
   done
 }
 
+# Set a random, temporary, 4 character password for the user. The password will
+# be set inside the chroot and the user will be required to change it upon next login.
+# $1 - out variable that will store the temp password
+set_temp_password() {
+  # Use a random 4 character string as the initial password
+  read -r "$1" < <(openssl rand -hex 2)
+  eval "printf '%s:%s' $USERNAME \$$1" | chpasswd --root /mnt
+  passwd --quiet --root /mnt --expire "$USERNAME"
+}
+
 print_password_notice() {
-  local pass_file="$1"
   printf %s $red$bold
-  figlet -f small "SAVE THIS PASSWORD!"
+  figlet -f small "Password NOTICE"
   printf %s $clr
   cat << EOF
-Your `red "temporary password"` for user `bold $USERNAME` is: `red "$(< "$pass_file")"`
-You will be prompted to choose a new password upon first login.
+A temporary password is used for the first login, after which you will be asked to choose a new password.
+
+The temporary password for `bold $USERNAME` is: `red "$temp_password"`
 
 EOF
 }
