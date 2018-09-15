@@ -23,7 +23,10 @@ ask() {
   # The default option, if any, will be in uppercase.
   local options_string="${options+(${options[@]// /\/}) }"
   if [[ -n "$default" ]]; then
-    # Make the default option uppercase
+    if [[ $options_string != *"$default"* ]]; then
+      echo "Default value does not appear in the options list" && return 2
+    fi
+    # Make the default option appear in uppercase
     options_string="${options_string/$default/${default^^}}"
   fi
   while true; do
