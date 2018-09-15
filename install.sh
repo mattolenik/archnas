@@ -63,6 +63,7 @@ packages=(
   python2
   python2-pip
   ranger
+  ruby
   rsync
   sudo
   samba
