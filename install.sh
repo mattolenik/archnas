@@ -221,12 +221,9 @@ prereqs=(
 if ! command -v "${prereqs[0]}" $>/dev/null; then
   echo `blue "Installing prereqs..."`
   pacman --noconfirm -Syq ${prereqs[@]}
-  clear
-  sleep 1
-  printf %s $blue$bold
-  figlet ArchNAS
-  printf %s $clr
 fi
 
-# TODO: redo tmux?
+clear
+cbanner $blue$bold ArchNAS
+
 install "$@"
