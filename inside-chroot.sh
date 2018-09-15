@@ -22,8 +22,6 @@ main() {
 
   setup_services
 
-  chown -R "$USERNAME:$USERNAME" "$HOME"
-
   cleanup
 }
 
@@ -34,11 +32,9 @@ cleanup() {
   find /root /home -type f \( -name .bash_history -o -name .zsh_history \) | xargs rm -f
 }
 
-
 get_github_latest_release() {
   curl -s https://api.github.com/repos/$1/releases/latest | jq -r '.assets[].browser_download_url'
 }
-
 
 install_ups() {
   yay -Syu network-ups-tools
