@@ -98,11 +98,11 @@ get_timezone_by_ip() {
 }
 
 setup_users() {
-  echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/wheel
+  echo "%wheel ALL=(ALL) ALL"   > /etc/sudoers.d/wheel
+  echo "Defaults lecture never" > /etc/sudoers.d/disable-lecture
   echo "PermitRootLogin no" >> /etc/ssh/sshd_config
   useradd -d "$HOME" -G wheel -s "$(command -v zsh)" "$USERNAME"
   mkdir -p "$HOME"
-  chown -R "$USERNAME:$USERNAME" "$HOME"
   passwd -l root
 }
 
