@@ -12,43 +12,43 @@
 # $4 - Default value, optional
 ##
 ask() {
-  local question="$2"
-  local options="${3:-*}"
-  local default="${4:-}"
+  local question="2"
+  local options="3"
+  local default="4"
   local answer
 
   # If ASK_AUTO_APPROVE is set, just return the default.
   if [[ -n $ASK_AUTO_APPROVE ]]; then
-    read -r "$1" <<< "$default"
+    read -r "$1" <<< "${!default}"
   fi
 
   # A nicely formatted option string in the style of: (yes/no/CANCEL)
   # The default option, if any, will be in uppercase.
-  local options_string="${options+(${options[@]// /\/}) }"
-  if [[ -n "$default" ]]; then
-    if [[ $options_string != *"$default"* ]]; then
+  local options_string="${!options+(${!options[@]// /\/}) }"
+  if [[ -n "${!default:-}" ]]; then
+    if [[ $options_string != *"${!default}"* ]]; then
       echo "Default value does not appear in the options list" && return 3
     fi
 
     # Make the default option appear in uppercase
-    options_string="${options_string/$default/${default^^}}"
+    options_string="${options_string/${!default}/${!default^^}}"
   fi
   while true; do
-    read -rp "$question $options_string" answer
-    answer="${answer:-$default}"
-    if [[ $options == "*" ]]; then
+    read -rp "${!question} $options_string" answer
+    answer="${answer:-${!default:-}}"
+    if [[ ${!options:-*} == "*" ]]; then
       # Populate the user-passed in variable
       read -r "$1" <<< "$answer"
       return
     fi
     # Trim and collapse whitespace and convert to lowercase
-    options="$(printf %s "$options" | xargs echo -n | awk '{print tolower($0)}')"
-    local opt_pattern='^('"${options// /|}"')$'
+    local normal_opts="$(printf %s "${!options}" | xargs echo -n | awk '{print tolower($0)}')"
+    local opt_pattern='^('"${normal_opts// /|}"')$'
     if [[ $answer =~ $opt_pattern ]]; then
       read -r "$1" <<< "$answer"
       return
     else
-      echo "ERROR: Invalid option, must be one of: ${options// /,}"
+      echo "ERROR: Invalid option, must be one of: ${normal_opts// /, }"
     fi
   done
 }
