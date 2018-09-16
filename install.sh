@@ -143,7 +143,7 @@ install() {
 
   umount -R /mnt
 
-  read -rp $'Installation complete! Press enter to reboot.\n'
+  read -rp $'\nInstallation complete! Press enter to reboot.\n'
   reboot
 }
 
@@ -179,7 +179,8 @@ select_disk() {
 }
 
 set_user_password() {
-  echo "One last thing! Set the password for `bold $USERNAME`"
+  echo
+  echo "`red "One last thing!"` Set the password for `bold $USERNAME`"
   passwd --root /mnt "$USERNAME"
 }
 
