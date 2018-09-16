@@ -130,7 +130,7 @@ SHELL
 #done
 #
 # Or a source a specific file
-# source $bashrc_dir/myfile
+# source $zshrc_dir/myfile
 SHELL
 }
 

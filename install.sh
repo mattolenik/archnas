@@ -54,6 +54,8 @@ packages=(
   libva-intel-driver
   libvdpau-va-gl
   libutil-linux
+  linux-lts
+  linux-lts-headers
   lm_sensors
   neovim
   netdata
@@ -75,6 +77,11 @@ packages=(
   ufw
   wget
   zsh
+)
+
+ignore_packages=(
+  linux
+  linux-headers
 )
 
 install() {
@@ -117,7 +124,8 @@ install() {
   mkdir -p /mnt${ESP}
   mount "$boot_part" /mnt${ESP}
 
-  pacstrap /mnt "${packages[@]}"
+  # Only attach the "--ignore <packages>" part if ignore_packages is unempty
+  pacstrap /mnt "${packages[@]}" ${ignore_packages+--ignore "${ignore_packages[@]}"}
 
   # Add discard flag to enable SSD trim. Tee is used to echo the contents to
   # the screen for debugging.
@@ -131,12 +139,11 @@ install() {
   local elapsed=$(( $(date +%s) - start_time ))
   echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60)) seconds"
 
-  set_temp_password temp_password
-  print_password_notice
+  set_user_password
 
   umount -R /mnt
 
-  read -rp $'Installation complete! Jot down your password and press enter to reboot.\n'
+  read -rp $'Installation complete! Press enter to reboot.\n'
   reboot
 }
 
@@ -171,28 +178,9 @@ select_disk() {
   done
 }
 
-# Set a random, temporary, 4 character password for the user. The password will
-# be set inside the chroot and the user will be required to change it upon next login.
-# $1 - out variable that will store the temp password
-set_temp_password() {
-  # Use a random 4 character string as the initial password
-  read -r "$1" < <(openssl rand -hex 2)
-  echo "$USERNAME:${!1}" | chpasswd --root /mnt
-  passwd --quiet --root /mnt --expire "$USERNAME"
-}
-
-
-# Print a banner to notify the user of their temporary password.
-print_password_notice() {
-  printf %s $red$bold
-  figlet -f small "Password NOTICE"
-  printf %s $clr
-  cat << EOF
-A temporary password is used for the first login, after which you will be asked to choose a new password.
-
-The temporary password for `bold $USERNAME` is: `red "$temp_password"`
-
-EOF
+set_user_password() {
+  echo "One last thing! Set the password for `bold $USERNAME`"
+  passwd --root /mnt "$USERNAME"
 }
 
 prereqs=(
