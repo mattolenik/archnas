@@ -84,15 +84,15 @@ ignore_packages=(
 
 install() {
   ask USERNAME "Enter a username" "*" "nasuser"
-  ask TIMEZONE "Enter timezone" "*" "auto-detect"
   ask HOST_NAME "Enter a hostname" "*" "archnas"
   ask DOMAIN "Enter the domain" "*" "local"
-
+  ask TIMEZONE "Enter timezone" "*" "auto-detect"
   export USERNAME
   export HOST_NAME
   export TIMEZONE
   export DOMAIN
 
+  echo
   select_disk system_device
 
   timedatectl set-ntp true
