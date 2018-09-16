@@ -28,11 +28,9 @@ trap 'echo ERROR on line $LINENO in $script_name' ERR
 start_time="$(date +%s)"
 
 source utils.sh
+source common.sh
 source vars.sh
-export USERNAME=${USERNAME:-nasuser}
-export HOST_NAME=${HOST_NAME:-archnas}
-export DOMAIN=${DOMAIN:-local}
-export TIMEZONE=${TIMEZONE:-auto}
+
 ROOT_LABEL=${ROOT_LABEL:-system}
 BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
 SWAP_PART_SIZE=${SWAP_PART_SIZE:-8192}
@@ -85,6 +83,16 @@ ignore_packages=(
 )
 
 install() {
+  ask USERNAME "Enter a username" "*" "nasuser"
+  ask TIMEZONE "Enter timezone" "*" "auto-detect"
+  ask HOST_NAME "Enter a hostname" "*" "archnas"
+  ask DOMAIN "Enter the domain" "*" "local"
+
+  export USERNAME
+  export HOST_NAME
+  export TIMEZONE
+  export DOMAIN
+
   select_disk system_device
 
   timedatectl set-ntp true

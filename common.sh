@@ -18,14 +18,14 @@ ask() {
   local answer
 
   # If ASK_AUTO_APPROVE is set, just return the default.
-  if [[ -n $ASK_AUTO_APPROVE ]]; then
-    read -r "$1" <<< "${!default}"
+  if [[ -n ${ASK_AUTO_APPROVE:-} ]]; then
+    read -r "$1" <<< "${!default:-}"
     return
   fi
 
   # If default is set and not empty
   if [[ -n "${!default:-}" ]]; then
-    local options_string="${!options+${!options[@]// /\/} }"
+    local options_string="${!options+${!options// /\/} }"
     if [[ ${!options:-*} == * ]]; then
       options_string="[${!default}] "
     elif [[ $options_string != *"${!default}"* ]]; then
@@ -37,7 +37,7 @@ ask() {
   fi
 
   while true; do
-    read -rp "${!question} $options_string" answer
+    read -rp "${!question} ${options_string}" answer
     answer="${answer:-${!default:-}}"
     if [[ ${!options:-*} == "*" ]]; then
       # Populate the user-passed in variable

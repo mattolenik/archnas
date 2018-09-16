@@ -69,7 +69,7 @@ install_yay() {
 }
 
 setup_clock() {
-  [[ $TIMEZONE == auto ]] && export TIMEZONE="$(get_timezone_by_ip "$(get_external_ip)")"
+  [[ $TIMEZONE == auto-detect ]] && export TIMEZONE="$(get_timezone_by_ip "$(get_external_ip)")"
   echo "Set timezone to $TIMEZONE"
   ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
   hwclock --systohc
