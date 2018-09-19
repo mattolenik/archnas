@@ -15,6 +15,7 @@
 # TODO: Add a post-install fix or TODO log (e.g. timezone lookup failed, FYI it's UTC)
 # TODO: Run services in Docker? Rockstor-like plugins but much simpler?
 # TODO: Figure out the device busy thing that occurs on second run of this script
+# TODO: Use blargparse
 ##
 
 set -euo pipefail
