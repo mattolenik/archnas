@@ -8,6 +8,8 @@
 #   . hue.sh @import accents  # Import the shell built-in styles, e.g. bold, underline, standout
 #   . hue.sh @import b u clr  # Import bold, underline, and clear
 
+[[ -n "${__HUE__IMPORTED__:-}" ]] && return || __HUE__IMPORTED__=1
+
 ##
 # Error codes
 ##
@@ -19,7 +21,7 @@ __ERR_MODULE_NOT_FOUND=66
 # Colors
 ##
 __hue__import_colors() {
-  if [[ -t 1 ]]; then
+  if use_color; then
     local c="tput setaf"
     BLACK=$($c 0); RED=$($c 1); GREEN=$($c 2); YELLOW=$($c 3); BLUE=$($c 4); MAGENTA=$($c 5); CYAN=$($c 6); WHITE=$($c 7); CLR=$(tput sgr0); NC="\\e[39m"
     black()  { printf "$BLACK$*$NC";  }; red()   { printf "$RED$*$NC";   }; green()   { printf "$GREEN$*$NC"; }
@@ -34,31 +36,36 @@ __hue__import_colors() {
   fi
 }
 
+use_color() {
+  [[ -n ${HUE_DISABLE:-} ]] && return 1
+  [[ -t 1 ]] && return 0
+}
+
 ##
 # Built-in accents
 ##
-__hue__import_u() {
-  if [[ -t 1 ]]; then
-    U_=$(tput smul); _U=$(tput rmul)
-    u() { printf "${U_}$*${_U}"; }
+__hue__import_uline() {
+  if use_color; then
+    ULINE_=$(tput smul); _ULINE=$(tput rmul)
+    uline() { printf "${ULINE_}$*${_ULINE}"; }
   else
-    U_='' _U=''
-    u() { printf "$*"; }
+    ULINE_='' _ULINE=''
+    uline() { printf "$*"; }
   fi
 }
 
-__hue__import_b() {
-  if [[ -t 1 ]]; then
-    B_="$(tput bold)"; _B="\\033[22m"
-    b() { printf "${B_}$*${_B}"; }
+__hue__import_bold() {
+  if use_color; then
+    BOLD_="$(tput bold)"; _BOLD="\\033[22m"
+    bold() { printf "${BOLD_}$*${_BOLD}"; }
   else
-    B_='' _B=''
-    b() { printf "$*"; }
+    BOLD_='' _BOLD=''
+    bold() { printf "$*"; }
   fi
 }
 
 __hue__import_so() {
-  if [[ -t 1 ]]; then
+  if use_color; then
     SO_=$(tput smso) _SO=$(tput rmso)
     so() { printf "${SO_}$*${_SO}"; }
   else
@@ -68,7 +75,7 @@ __hue__import_so() {
 }
 
 __hue__import_clr() {
-  if [[ -t 1 ]]; then
+  if use_color; then
     clr() { tput sgr0; }
   else
     clr() { :; }
@@ -76,8 +83,8 @@ __hue__import_clr() {
 }
 
 __hue__import_accents() {
-  __hue__import_u
-  __hue__import_b
+  __hue__import_uline
+  __hue__import_bold
   __hue__import_so
   __hue__import_clr
 }
@@ -86,7 +93,7 @@ __hue__import_accents() {
 # Additional custom styles
 ##
 __hue__import_em() {
-  if [[ -t 1 ]]; then
+  if use_color; then
     EM_=$(tput bold); _EM="\\033[22m"
     em() { printf "${EM_}$*${_EM}"; }
   else
@@ -96,7 +103,7 @@ __hue__import_em() {
 }
 
 __hue__import_err() {
-  if [[ -t 1 ]]; then
+  if use_color; then
     ERR_=$(tput setaf 1); _ERR="\\e[39m"
     err() { printf "${ERR_}$*${_ERR}"; }
   else
@@ -106,7 +113,7 @@ __hue__import_err() {
 }
 
 __hue__import_wrn() {
-  if [[ -t 1 ]]; then
+  if use_color; then
     WRN_=$(tput setaf 1); _WRN="\\e[39m"
     wrn() { printf "${WRN_}$*${_WRN}"; }
   else
@@ -116,7 +123,7 @@ __hue__import_wrn() {
 }
 
 __hue__import_success() {
-  if [[ -t 1 ]]; then
+  if use_color; then
     SUCCESS_="$(tput bold)$(tput setaf 2)"; _SUCCESS="\\e[39m\\033[22m"
     success() { printf "${SUCCESS_}$*${_SUCCESS}"; }
   else
@@ -126,7 +133,7 @@ __hue__import_success() {
 }
 
 __hue__import_failure() {
-  if [[ -t 1 ]]; then
+  if use_color; then
     FAILURE_="$(tput bold)$(tput setaf 1)"; _FAILURE="\\e[39m\\033[22m"
     failure() { printf "${FAILURE_}$*${_FAILURE}"; }
   else

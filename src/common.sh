@@ -11,6 +11,9 @@
 #      input. Options are automatically lowercase only.
 # $4 - Default value, optional
 ##
+
+source src/hue/hue.sh @import
+
 ask() {
   local question="2"
   local options="3"
@@ -54,4 +57,16 @@ ask() {
       echo "ERROR: Invalid option, must be one of: ${normal_opts// /, }"
     fi
   done
+}
+
+bail() {
+  echo "$@" && exit 1
+}
+
+# Colored banner, first arg should be character(s) from tput
+cbanner() {
+  printf %s $1
+  shift
+  figlet "$*"
+  clr
 }

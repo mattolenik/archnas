@@ -21,14 +21,15 @@ set -euo pipefail
 [[ -n ${TRACE:-} ]] && set -x
 [[ $(uname -r) != *ARCH* ]] && echo "This script can only run on Arch Linux!" && exit 1
 
+
 script_name="${0##*/}"
 LOG_FILE="${LOG_FILE:-${script_name%.*}.log}"
 exec > >(tee -i "$LOG_FILE"); exec 2>&1
 trap 'echo ERROR on line $LINENO in $script_name' ERR
 start_time="$(date +%s)"
 
-source utils.sh
-source common.sh
+source src/hue/hue.sh @import
+source src/common.sh
 source vars.sh
 
 ROOT_LABEL=${ROOT_LABEL:-system}
@@ -103,7 +104,7 @@ install() {
   read -rp "Type YES to proceed, or anything else to abort: " continue
   [[ $continue != "YES" ]] && bail "Aborting installation"
 
-  cbanner $green$bold "Installing..."
+  cbanner $GREEN$BOLD_ "Installing..."
   echo
   echo "Output is logged to a file named `green "$LOG_FILE"`"
 
@@ -139,9 +140,9 @@ install() {
   genfstab -U /mnt | sed 's/ssd/ssd,discard/' | tee /mnt/etc/fstab
 
   # Perform the part of the install that runs inside the chroot.
-  arch-chroot /mnt /bin/bash < inside-chroot.sh
+  arch-chroot /mnt /bin/bash < src/inside-chroot.sh
 
-  cbanner $green$bold "...done!"
+  cbanner $GREEN$BOLD_ "...done!"
 
   local elapsed=$(( $(date +%s) - start_time ))
   echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60)) seconds"
@@ -200,7 +201,8 @@ if ! command -v "${prereqs[0]}" $>/dev/null; then
   pacman --noconfirm -Syq ${prereqs[@]}
 fi
 
-clear
-cbanner $blue$bold ArchNAS
+printf '\n\n\n'
+
+cbanner $BLUE$BOLD_ ArchNAS
 
 install "$@"
