@@ -33,7 +33,7 @@ cleanup() {
 }
 
 get_github_latest_release() {
-  curl -s https://api.github.com/repos/$1/releases/latest | jq -r '.assets[].browser_download_url'
+  curl -s "https://api.github.com/repos/$1/releases/latest" | jq -r '.assets[].browser_download_url'
 }
 
 install_ups() {

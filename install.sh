@@ -135,8 +135,7 @@ install() {
   # Only attach the "--ignore <packages>" part if ignore_packages is unempty
   pacstrap /mnt "${packages[@]}" ${ignore_packages+--ignore "${ignore_packages[@]}"}
 
-  # Add discard flag to enable SSD trim. Tee is used to echo the contents to
-  # the screen for debugging.
+  # Add discard flag to enable SSD trim. Tee is used to echo the contents to the screen for debugging.
   genfstab -U /mnt | sed 's/ssd/ssd,discard/' | tee /mnt/etc/fstab
 
   # Perform the part of the install that runs inside the chroot.
