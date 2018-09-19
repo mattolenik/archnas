@@ -22,6 +22,7 @@ main() {
 
   setup_services
 
+  chown -R "$USERNAME:$USERNAME" "$HOME"
   cleanup
 }
 
