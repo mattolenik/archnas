@@ -104,7 +104,7 @@ install() {
   read -rp "Type YES to proceed, or anything else to abort: " continue
   [[ $continue != "YES" ]] && bail "Aborting installation"
 
-  cbanner $GREEN$BOLD_ "Installing..."
+  cbanner "$GREEN$BOLD_" "Installing..."
   echo
   echo "Output is logged to a file named `green "$LOG_FILE"`"
 
@@ -142,7 +142,7 @@ install() {
   # Perform the part of the install that runs inside the chroot.
   arch-chroot /mnt /bin/bash < src/inside-chroot.sh
 
-  cbanner $GREEN$BOLD_ "...done!"
+  cbanner "$GREEN$BOLD_" "...done!"
 
   local elapsed=$(( $(date +%s) - start_time ))
   echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60)) seconds"
@@ -203,6 +203,6 @@ fi
 
 printf '\n\n\n'
 
-cbanner $BLUE$BOLD_ ArchNAS
+cbanner "$BLUE$BOLD_" ArchNAS
 
 install "$@"
