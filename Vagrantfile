@@ -7,13 +7,13 @@
 # you're doing.
 Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
-    v.name = "arch_test"
+    v.name = "archnas_test"
   end
-  config.vm.box = "archlinux/archlinux"
+  config.vm.box = "generic/arch"
 
   config.vm.network "forwarded_port", guest: 32400, host: 3240, host_ip: "127.0.0.1"
 
   config.vm.provision "shell", inline: <<-SHELL
-    pacman -Syu
+    pacman --noconfirm -Syu
   SHELL
 end
