@@ -1,0 +1,8 @@
+#!/bin/sh -e
+# Run this script to forward traffic from your Plex server to your local
+# machine. You can then access the Plex server from http://localhost:8888.
+# This brings you to the admin side you can't normally get to remotely.
+USERNAME=nasuser
+IP=192.168.1.10
+
+ssh $USERNAME@$IP -L 8888:localhost:32400
