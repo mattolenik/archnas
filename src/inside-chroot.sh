@@ -12,17 +12,17 @@ main() {
   setup_clock
   set_locale "$LOCALE"
   set_hostname "$HOST_NAME" "$DOMAIN"
+  setup_services
 
   grub-install --target=x86_64-efi --efi-directory="$ESP" --bootloader-id=GRUB
   grub-mkconfig -o /boot/grub/grub.cfg
+
+  chown -R "$USERNAME:$USERNAME" "$HOME"
 
   install_yay
   install_plexpass
   install_ups
 
-  setup_services
-
-  chown -R "$USERNAME:$USERNAME" "$HOME"
   cleanup
 }
 
@@ -80,8 +80,8 @@ setup_clock() {
 
 set_locale() {
   echo "$1.UTF-8 UTF-8" > /etc/locale.gen
+  echo "LANG=$1.UTF-8" > /etc/locale.conf
   locale-gen
-  localectl set-locale "LANG=$1.UTF-8"
 }
 
 set_hostname() {

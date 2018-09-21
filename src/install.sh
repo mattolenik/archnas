@@ -29,7 +29,7 @@ source "${IMPORT:-.}/blargparse/args.sh"
 source "${IMPORT:-.}/common.sh"
 
 ROOT_LABEL=${ROOT_LABEL:-system}
-BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
+CHROOT_SCRIPT="${IMPORT:-.}/inside-chroot.sh"
 
 # UEFI system partition location
 export ESP=${ESP:-/boot}
@@ -107,7 +107,7 @@ install() {
   echo "Output is logged to a file named `green "$LOG_FILE"`"
 
   SWAP_PART_SIZE=${SWAP_PART_SIZE:-8192}
-  BOOT_PART_SIZE=550
+  BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
 
   wipefs -af "$system_device"
   parted "$system_device" mklabel gpt
@@ -144,7 +144,7 @@ install() {
   genfstab -U /mnt | sed 's/ssd/ssd,discard/' | tee /mnt/etc/fstab
 
   # Perform the part of the install that runs inside the chroot.
-  arch-chroot /mnt /bin/bash < src/inside-chroot.sh
+  arch-chroot /mnt /bin/bash < "$CHROOT_SCRIPT"
 
   cbanner "$GREEN$BOLD_" "...done!"
 
