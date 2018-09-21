@@ -54,6 +54,7 @@ install_pip() {
 }
 
 install_plexpass() {
+  #su
   #sudo -u "$USERNAME" yay -Syu plex-media-server-plexpass
   write_plex_config
 }
@@ -95,6 +96,7 @@ get_external_ip() {
   if (( $? != 0 )); then
     echo NULL
   fi
+  echo "$output"
 }
 
 get_timezone_by_ip() {

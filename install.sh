@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2006
 ##
 # Installs an Arch-based NAS onto the specified disk.
 # It will partition the disk and install the OS.
@@ -6,7 +7,6 @@
 # No arguments are needed, guided prompts will follow.
 ##
 # TODO: Add banners/section announcements with timestamps
-# TODO: Prompts for variables instead of vars.sh
 # TODO: Copy over public key, defaulting to id_rsa, offer to make new one?
 # TODO: Set up SMB user and SMB shares
 # TODO: Add prompts for options in addition to vars
@@ -30,15 +30,16 @@ trap 'echo ERROR on line $LINENO in $script_name' ERR
 start_time="$(date +%s)"
 
 source src/hue/hue.sh @import
+source src/blargparse/args.sh
 source src/common.sh
-source vars.sh
 
 ROOT_LABEL=${ROOT_LABEL:-system}
 BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
-SWAP_PART_SIZE=${SWAP_PART_SIZE:-8192}
 
 # UEFI system partition location
 export ESP=${ESP:-/boot}
+
+unset USERNAME
 
 packages=(
   base
@@ -84,30 +85,32 @@ ignore_packages=(
   linux-headers
 )
 
+is_vagrant() {
+  [[ -d /home/vagrant ]]
+}
+
 install() {
-  ask USERNAME "Enter a username" "*" "nasuser"
-  ask HOST_NAME "Enter a hostname" "*" "archnas"
-  ask DOMAIN "Enter the domain" "*" "local"
-  ask TIMEZONE "Enter timezone" "*" "auto-detect"
+  ask USERNAME "Enter a username" "*" "${USERNAME:-nasuser}"
+  ask HOST_NAME "Enter a hostname" "*" "${HOST_NAME:-archnas}"
+  ask DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
+  ask TIMEZONE "Enter timezone" "*" "${TIMEZONE:-auto-detect}"
   export USERNAME
   export HOST_NAME
   export TIMEZONE
   export DOMAIN
 
   echo
+  local system_device
   select_disk system_device
 
-  timedatectl set-ntp true
-
-  echo
-  echo "`red NOTICE:` ArchNAS is about to be installed onto disk: `red "$system_device"`"
-  echo "Continue? This will `red DESTROY` any existing data."
-  read -rp "Type YES to proceed, or anything else to abort: " continue
-  [[ $continue != "YES" ]] && bail "Aborting installation"
+  is_vagrant || timedatectl set-ntp true
 
   cbanner "$GREEN$BOLD_" "Installing..."
   echo
   echo "Output is logged to a file named `green "$LOG_FILE"`"
+
+  SWAP_PART_SIZE=${SWAP_PART_SIZE:-8192}
+  BOOT_PART_SIZE=550
 
   wipefs -af "$system_device"
   parted "$system_device" mklabel gpt
@@ -117,22 +120,25 @@ install() {
   parted "$system_device" mkpart primary linux-swap $((1+BOOT_PART_SIZE))MiB $((1+BOOT_PART_SIZE+SWAP_PART_SIZE))MiB
   parted "$system_device" mkpart primary $((1+BOOT_PART_SIZE+SWAP_PART_SIZE))MiB 100%
 
-  parts=($(fdisk -l "$system_device" | awk '/^\/dev/ {print $1}'))
+  local parts
+  readarray parts < <(fdisk -l "$system_device" | awk '/^\/dev/ {print $1}')
   boot_part="${parts[0]}"
   swap_part="${parts[1]}"
   root_part="${parts[2]}"
 
   # Create partitions
-  mkswap "$swap_part"
-  swapon "$swap_part"
+  if ! is_vagrant; then
+    mkswap "$swap_part"
+    swapon "$swap_part"
+  fi
   mkfs.fat -F32 "$boot_part"
   mkfs.btrfs -f -L "$ROOT_LABEL" "$root_part"
 
   # Always mount root partition before next steps
   mount "$root_part" /mnt
 
-  mkdir -p /mnt${ESP}
-  mount "$boot_part" /mnt${ESP}
+  mkdir -p "/mnt${ESP}"
+  mount "$boot_part" "/mnt${ESP}"
 
   # Only attach the "--ignore <packages>" part if ignore_packages is unempty
   pacstrap /mnt "${packages[@]}" ${ignore_packages+--ignore "${ignore_packages[@]}"}
@@ -152,8 +158,18 @@ install() {
 
   umount -R /mnt
 
+  [[ -n ${AUTO_APPROVE:-} ]] && return
   read -rp $'\nInstallation complete! Press enter to reboot.\n'
   reboot
+}
+
+confirm_disk() {
+  [[ -n ${AUTO_APPROVE:-} ]] && return 0
+  local continue
+  echo "`red NOTICE:` ArchNAS is about to be installed onto disk: `red "$1"`"
+  echo "Continue? This will `red DESTROY` any existing data."
+  read -rp "Type YES to proceed, or anything else to abort: " continue
+  [[ $continue != "YES" ]] && fail "Aborting installation"
 }
 
 # Find available, writeable disks for install. It will print
@@ -169,6 +185,12 @@ list_disks() {
 # Show a menu selection of disks and return the corresponding device file.
 # $1 - out variable that will store the result
 select_disk() {
+  if [[ -n ${AUTO_APPROVE:-} ]]; then
+    [[ -z $TARGET_DISK ]] && fail "Target disk must be specified when using auto-approve"
+    read -r "$1" <<< "$TARGET_DISK"
+    return 0
+  fi
+
   echo "Choose a disk to auto-partition. Any existing data will be lost. Press CTRL-C to abort."
   PS3=$'\nChoose disk #) '
   IFS=$'\n'
@@ -189,21 +211,66 @@ select_disk() {
 
 set_user_password() {
   echo
-  echo "`red "One last thing!"` Set the password for `bold $USERNAME`"
+  echo "`red "One last thing!"` Set the password for `bold "$USERNAME"`"
   passwd --root /mnt "$USERNAME"
 }
 
-prereqs=(
-  figlet
-)
+main() {
+  prereqs=(
+    figlet
+    parted
+  )
 
-if ! command -v "${prereqs[0]}" $>/dev/null; then
-  echo `blue "Installing prereqs..."`
-  pacman --noconfirm -Syq ${prereqs[@]}
-fi
+  if ! command -v "${prereqs[0]}" $>/dev/null; then
+    echo `blue "Installing prereqs..."`
+    pacman --noconfirm -Syq "${prereqs[@]}"
+  fi
 
-printf '\n\n\n'
+  printf '\n\n\n'
 
-cbanner "$BLUE$BOLD_" ArchNAS
+  cbanner "$BLUE$BOLD_" ArchNAS
 
-install "$@"
+  install
+}
+username_regex='^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$'
+
+handle_option() {
+  local __="$1"
+  local opt="$2"
+  shift 2
+  case $opt in
+    auto-approve)
+      export AUTO_APPROVE=1
+      ;;
+    target-disk)
+      check_opt "$opt" "$1"
+      TARGET_DISK="$1"
+      ;;
+    user)
+      check_opt "$opt" "$1" "$username_regex" "The username '$1' is not valid"
+      USERNAME="$1"
+      ;;
+    hostname)
+      check_opt "$opt" "$1"
+      HOST_NAME="$1"
+      ;;
+    domain)
+      check_opt "$opt" "$1"
+      DOMAIN="$1"
+      ;;
+    timezone)
+      check_opt "$opt" "$1"
+      TIMEZONE="$1"
+      ;;
+    swap-size)
+      check_opt "$opt" "$1" '^[0-9]{4,}$' "swap-size (megabytes) must be an integer value of at least 1000"
+      SWAP_PART_SIZE="$1"
+      ;;
+    *)
+      fail "Unknown option '$__$2'"
+  esac
+}
+
+parse_args handle_option positionals "$@"
+
+main

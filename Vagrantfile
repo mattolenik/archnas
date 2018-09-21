@@ -14,7 +14,7 @@ Vagrant.configure("2") do |config|
 
     # Create and attach disk
     unless File.exist?(second_disk)
-      v.customize ['createhd', '--filename', second_disk, '--format', 'VDI', '--size', 8 * 1024]
+      v.customize ['createhd', '--filename', second_disk, '--format', 'VDI', '--size', 12 * 1024]
     end
     v.customize ['storageattach', :id, '--storagectl', 'IDE Controller', '--port', 0, '--device', 1, '--type', 'hdd', '--medium', second_disk]
   end
@@ -24,8 +24,9 @@ Vagrant.configure("2") do |config|
   config.vm.provision "file", source: "./src", destination: "./src"
 
   config.vm.provision "shell", inline: <<-SHELL
+    MAKEDEV sdb
     pacman --noconfirm -Syu
-    ./install.sh
+    #./install.sh
     # run tests
   SHELL
 end

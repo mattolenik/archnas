@@ -20,8 +20,8 @@ ask() {
   local default="4"
   local answer
 
-  # If ASK_AUTO_APPROVE is set, just return the default.
-  if [[ -n ${ASK_AUTO_APPROVE:-} ]]; then
+  # If AUTO_APPROVE is set, just return the default.
+  if [[ -n ${AUTO_APPROVE:-} ]]; then
     read -r "$1" <<< "${!default:-}"
     return
   fi
@@ -59,7 +59,7 @@ ask() {
   done
 }
 
-bail() {
+fail() {
   echo "$@" && exit 1
 }
 

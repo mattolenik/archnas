@@ -58,3 +58,15 @@ parse_args() {
     __i=$((__i + 1))
   done
 }
+
+##
+# Checks if an option exists, and optionally if it matches a regex
+# $1 - Argument name
+# $2 - Argument value
+# $3 - (optional) if provided, validation will be done against this regex pattern.
+# $4 - (optional) error message to print when regex validation fails
+##
+check_opt() {
+  [[ -z $2 ]] && echo "Option $1 expects a value" 1>&2 && return 1
+  [[ $2 =~ $3 ]] || echo "${4:-The value provided for option $2 is not valid}" 1>&2 && return 2
+}
