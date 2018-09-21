@@ -8,7 +8,7 @@
 #   . hue.sh @import accents  # Import the shell built-in styles, e.g. bold, underline, standout
 #   . hue.sh @import b u clr  # Import bold, underline, and clear
 
-[[ -n "${__HUE__IMPORTED__:-}" ]] && return || __HUE__IMPORTED__=1
+[[ -n "${__HUE__SH__:-}" ]] && return || __HUE__SH__=1
 
 ##
 # Error codes

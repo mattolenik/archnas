@@ -12,7 +12,9 @@
 # $4 - Default value, optional
 ##
 
-source src/hue/hue.sh @import
+[[ -n "${__COMMON_SH__:-}" ]] && return || __COMMON_SH__=1
+
+source "${IMPORT:-.}/hue/hue.sh" @import
 
 ask() {
   local question="2"

@@ -1,0 +1,2 @@
+#!/bin/sh -e
+VBoxManage list systemproperties | awk '/Default machine folder/ {match($0, /:[[:blank:]]+(.*)/, a); printf a[1]}'

@@ -10,15 +10,15 @@ main() {
 
   install_pip
   setup_clock
-  set_locale
+  set_locale "$LOCALE"
   set_hostname "$HOST_NAME" "$DOMAIN"
 
-  grub-install --target=x86_64-efi --efi-directory=$ESP --bootloader-id=GRUB
+  grub-install --target=x86_64-efi --efi-directory="$ESP" --bootloader-id=GRUB
   grub-mkconfig -o /boot/grub/grub.cfg
 
   install_yay
   install_plexpass
-  #install_ups
+  install_ups
 
   setup_services
 
@@ -30,6 +30,7 @@ cleanup() {
   rm -rf /tmp/*
   rm -rf /var/log/*
   # Remove bash and zsh history from all users
+  # shellcheck disable=SC2038
   find /root /home -type f \( -name .bash_history -o -name .zsh_history \) | xargs rm -f
 }
 
@@ -38,7 +39,7 @@ get_github_latest_release() {
 }
 
 install_ups() {
-  yay -Syu network-ups-tools
+  su -c "yay -Syu network-ups-tools" -s /bin/sh "$USERNAME"
   cat <<EOF > /etc/ups/ups.conf
 [ups]
     driver = usbhid-ups
@@ -54,15 +55,14 @@ install_pip() {
 }
 
 install_plexpass() {
-  #su
-  #sudo -u "$USERNAME" yay -Syu plex-media-server-plexpass
+  su -c "yay -Syu plex-media-server-plexpass" -s /bin/sh "$USERNAME"
   write_plex_config
 }
 
 install_yay() {
   (
-    cd $(mktemp -d)
-    curl -sSL $(get_github_latest_release Jguer/yay) | tar xz --strip-components=1
+    cd "$(mktemp -d)"
+    curl -sSL "$(get_github_latest_release Jguer/yay)" | tar xz --strip-components=1
     mv yay /usr/bin
     mv yay.8 /usr/share/man/
     mv bash /etc/bashrc.d/yay
@@ -71,16 +71,17 @@ install_yay() {
 }
 
 setup_clock() {
+  # shellcheck disable=SC2155
   [[ $TIMEZONE == auto-detect ]] && export TIMEZONE="$(get_timezone_by_ip "$(get_external_ip)")"
-  echo "Set timezone to $TIMEZONE"
-  ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
+  echo "Setting timezone to $TIMEZONE"
+  ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
   hwclock --systohc
 }
 
 set_locale() {
-  echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen
-  echo 'LANG=en_US.UTF-8' > /etc/locale.conf
+  echo "$1.UTF-8 UTF-8" > /etc/locale.gen
   locale-gen
+  localectl set-locale "LANG=$1.UTF-8"
 }
 
 set_hostname() {
@@ -92,8 +93,7 @@ set_hostname() {
 
 get_external_ip() {
   local output
-  output=$(dig +short myip.opendns.com @resolver1.opendns.com)
-  if (( $? != 0 )); then
+  if ! output=$(dig +short myip.opendns.com @resolver1.opendns.com); then
     echo NULL
   fi
   echo "$output"

@@ -9,13 +9,8 @@
 # TODO: Add banners/section announcements with timestamps
 # TODO: Copy over public key, defaulting to id_rsa, offer to make new one?
 # TODO: Set up SMB user and SMB shares
-# TODO: Add prompts for options in addition to vars
-# TODO: Define service list in outer script
 # TODO: Setup ufw
-# TODO: Add a post-install fix or TODO log (e.g. timezone lookup failed, FYI it's UTC)
 # TODO: Run services in Docker? Rockstor-like plugins but much simpler?
-# TODO: Figure out the device busy thing that occurs on second run of this script
-# TODO: Use blargparse
 ##
 
 set -euo pipefail
@@ -29,9 +24,9 @@ exec > >(tee -i "$LOG_FILE"); exec 2>&1
 trap 'echo ERROR on line $LINENO in $script_name' ERR
 start_time="$(date +%s)"
 
-source src/hue/hue.sh @import
-source src/blargparse/args.sh
-source src/common.sh
+source "${IMPORT:-.}/hue/hue.sh" @import
+source "${IMPORT:-.}/blargparse/args.sh"
+source "${IMPORT:-.}/common.sh"
 
 ROOT_LABEL=${ROOT_LABEL:-system}
 BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
@@ -90,14 +85,16 @@ is_vagrant() {
 }
 
 install() {
+  ask LOCALE "Enter a locale" "*" "${LOCALE:-en_US}"
   ask USERNAME "Enter a username" "*" "${USERNAME:-nasuser}"
   ask HOST_NAME "Enter a hostname" "*" "${HOST_NAME:-archnas}"
   ask DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
   ask TIMEZONE "Enter timezone" "*" "${TIMEZONE:-auto-detect}"
+  export LOCALE=${LOCALE:-"en_US"}
   export USERNAME
   export HOST_NAME
-  export TIMEZONE
   export DOMAIN
+  export TIMEZONE
 
   echo
   local system_device
@@ -121,7 +118,7 @@ install() {
   parted "$system_device" mkpart primary $((1+BOOT_PART_SIZE+SWAP_PART_SIZE))MiB 100%
 
   local parts
-  readarray parts < <(fdisk -l "$system_device" | awk '/^\/dev/ {print $1}')
+  parts=($(fdisk -l "$system_device" | awk '/^\/dev/ {print $1}'))
   boot_part="${parts[0]}"
   swap_part="${parts[1]}"
   root_part="${parts[2]}"
@@ -218,7 +215,6 @@ set_user_password() {
 main() {
   prereqs=(
     figlet
-    parted
   )
 
   if ! command -v "${prereqs[0]}" $>/dev/null; then
@@ -253,6 +249,10 @@ handle_option() {
     hostname)
       check_opt "$opt" "$1"
       HOST_NAME="$1"
+      ;;
+    locale)
+      check_opt "$opt" "$1"
+      LOCALE="$1"
       ;;
     domain)
       check_opt "$opt" "$1"
