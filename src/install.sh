@@ -24,9 +24,10 @@ exec > >(tee -i "$LOG_FILE"); exec 2>&1
 trap 'echo ERROR on line $LINENO in $script_name' ERR
 start_time="$(date +%s)"
 
-source "${IMPORT:-.}/hue/hue.sh" @import
-source "${IMPORT:-.}/blargparse/args.sh"
-source "${IMPORT:-.}/common.sh"
+IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
+source "${IMPORT}/hue/hue.sh" @import
+source "${IMPORT}/blargparse/args.sh"
+source "${IMPORT}/common.sh"
 
 ROOT_LABEL=${ROOT_LABEL:-system}
 CHROOT_SCRIPT="${IMPORT:-.}/inside-chroot.sh"
