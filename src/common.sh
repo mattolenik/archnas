@@ -73,6 +73,9 @@ cbanner() {
   clr
 }
 
+# Repeat a string n times
+# $1 - string to repeat
+# $2 - number of times to repeat
 str_repeat() {
   local i=0
   while (( i++ < $2 )); do
@@ -80,12 +83,18 @@ str_repeat() {
   done
 }
 
+# Create a banner in a box
+# $1 - message to print inside the box
+# $2 - padding, default of 2
+# $3 - color/style characters (optional)
 boxbanner() {
   local msg="$1"
-  local padding_len="${2:-0}"
+  local padding_len="${2:-2}"
   local padding_str="$(str_repeat ' ' "$padding_len")"
   local bar_str="$(str_repeat '═' $(( padding_len * 2 + ${#msg} )))"
+  printf '%s' "${3:-}"
   printf '╔%s╗\n' "$bar_str"
   printf '║%s║\n' "${padding_str}${msg}${padding_str}"
   printf '╚%s╝\n' "$bar_str"
+  [[ -n ${3:-} ]] && tput sgr0
 }
