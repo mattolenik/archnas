@@ -103,7 +103,7 @@ install() {
 
   is_vagrant || timedatectl set-ntp true
 
-  cbanner "$GREEN$BOLD_" "Installing..."
+  boxbanner "Installing..." "$GREEN$BOLD_"
   echo
   echo "Output is logged to a file named `green "$LOG_FILE"`"
 
@@ -147,7 +147,7 @@ install() {
   # Perform the part of the install that runs inside the chroot.
   arch-chroot /mnt /bin/bash < "$CHROOT_SCRIPT"
 
-  cbanner "$GREEN$BOLD_" "...done!"
+  boxbanner "...done!" "$GREEN$BOLD_"
 
   local elapsed=$(( $(date +%s) - start_time ))
   echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60)) seconds"
@@ -214,21 +214,10 @@ set_user_password() {
 }
 
 main() {
-  prereqs=(
-    figlet
-  )
-
-  if ! command -v "${prereqs[0]}" $>/dev/null; then
-    echo `blue "Installing prereqs..."`
-    pacman --noconfirm -Syq "${prereqs[@]}"
-  fi
-
-  printf '\n\n\n'
-
-  cbanner "$BLUE$BOLD_" ArchNAS
-
+  boxbanner ArchNAS 6 "$BLUE$BOLD_"
   install
 }
+
 username_regex='^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$'
 
 handle_option() {
