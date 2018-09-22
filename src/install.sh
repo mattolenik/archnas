@@ -17,6 +17,8 @@ set -euo pipefail
 [[ -n ${TRACE:-} ]] && set -x
 [[ $(uname -r) != *ARCH* ]] && echo "This script can only run on Arch Linux!" && exit 1
 
+# Elevate to root if necessary, usually only needed during testing
+[[ $EUID != 0 ]] && exec sudo "$0" "$@"
 
 script_name="${0##*/}"
 LOG_FILE="${LOG_FILE:-${script_name%.*}.log}"
@@ -119,10 +121,10 @@ install() {
   parted "$system_device" mkpart primary $((1+BOOT_PART_SIZE+SWAP_PART_SIZE))MiB 100%
 
   local parts
-  parts=($(fdisk -l "$system_device" | awk '/^\/dev/ {print $1}'))
-  boot_part="${parts[0]}"
-  swap_part="${parts[1]}"
-  root_part="${parts[2]}"
+  readarray parts < <(sfdisk -J "$system_device" | jq -r '.partitiontable.partitions[].node')
+  local boot_part="${parts[0]}"
+  local swap_part="${parts[1]}"
+  local root_part="${parts[2]}"
 
   # Create partitions
   if ! is_vagrant; then
@@ -213,8 +215,17 @@ set_user_password() {
   passwd --root /mnt "$USERNAME"
 }
 
+install_prereqs() {
+  local prereqs=(jq)
+  if ! command -v "${prereqs[0]}" $>/dev/null; then
+    echo `blue "Installing prereqs..."`
+    pacman --noconfirm -Syq "${prereqs[@]}"
+  fi
+}
+
 main() {
-  boxbanner ArchNAS 6 "$BLUE$BOLD_"
+  install_prereqs
+  boxbanner "ArchNAS Installation" "$BLUE$BOLD_"
   install
 }
 
