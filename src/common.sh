@@ -97,5 +97,5 @@ boxbanner() {
   printf '╔%s╗\n' "$bar_str"
   printf '║%s║\n' "${padding_str}${msg}${padding_str}"
   printf '╚%s╝\n' "$bar_str"
-  [[ -n ${color_str:-} ]] && tput sgr0
+  [[ -n ${color_str:-} ]] && tput sgr0 || true
 }
