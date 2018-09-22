@@ -65,14 +65,6 @@ fail() {
   echo "$@" && exit 1
 }
 
-# Colored banner, first arg should be character(s) from tput
-cbanner() {
-  printf %s $1
-  shift
-  figlet "$*"
-  clr
-}
-
 # Repeat a string n times
 # $1 - string to repeat
 # $2 - number of times to repeat
@@ -84,17 +76,26 @@ str_repeat() {
 }
 
 # Create a banner in a box
-# $1 - message to print inside the box
-# $2 - padding, default of 2
-# $3 - color/style characters (optional)
+# $1   - message to print inside the box
+# $2   - padding, default of 2 (optional)
+# $2/3 - color/style characters (optional)
+#        If padding is passed as $2, then color becomes $3. If padding is
+#        omitted, color becomes $2.
 boxbanner() {
-  local msg="$1"
-  local padding_len="${2:-2}"
-  local padding_str="$(str_repeat ' ' "$padding_len")"
-  local bar_str="$(str_repeat '═' $(( padding_len * 2 + ${#msg} )))"
-  printf '%s' "${3:-}"
+  local msg bar_str color_str padding_len padding_str
+  msg="$1"
+  if [[ $2 =~ ^[0-9]+$ ]]; then
+    padding_len="$2"
+    color_str="${3:-}"
+  else
+    padding_len=2
+    color_str="${2:-}"
+  fi
+  padding_str="$(str_repeat ' ' "$padding_len")"
+  bar_str="$(str_repeat '═' $(( padding_len * 2 + ${#msg} )))"
+  printf '%s' "${color_str:-}"
   printf '╔%s╗\n' "$bar_str"
   printf '║%s║\n' "${padding_str}${msg}${padding_str}"
   printf '╚%s╝\n' "$bar_str"
-  [[ -n ${3:-} ]] && tput sgr0
+  [[ -n ${color_str:-} ]] && tput sgr0
 }
