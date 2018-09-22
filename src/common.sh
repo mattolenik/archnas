@@ -13,8 +13,8 @@
 ##
 
 [[ -n "${__COMMON_SH__:-}" ]] && return || __COMMON_SH__=1
-
-source "${IMPORT:-.}/hue/hue.sh" @import
+IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
+source "${IMPORT}/hue/hue.sh" @import
 
 ask() {
   local question="2"
@@ -71,4 +71,21 @@ cbanner() {
   shift
   figlet "$*"
   clr
+}
+
+str_repeat() {
+  local i=0
+  while (( i++ < $2 )); do
+    printf %s "$1"
+  done
+}
+
+boxbanner() {
+  local msg="$1"
+  local padding_len="${2:-0}"
+  local padding_str="$(str_repeat ' ' "$padding_len")"
+  local bar_str="$(str_repeat '═' $(( padding_len * 2 + ${#msg} )))"
+  printf '╔%s╗\n' "$bar_str"
+  printf '║%s║\n' "${padding_str}${msg}${padding_str}"
+  printf '╚%s╝\n' "$bar_str"
 }
