@@ -6,11 +6,9 @@
 #
 # No arguments are needed, guided prompts will follow.
 ##
-# TODO: Add banners/section announcements with timestamps
 # TODO: Copy over public key, defaulting to id_rsa, offer to make new one?
 # TODO: Set up SMB user and SMB shares
 # TODO: Setup ufw
-# TODO: Run services in Docker? Rockstor-like plugins but much simpler?
 ##
 
 set -euo pipefail
@@ -27,12 +25,12 @@ trap 'echo ERROR on line $LINENO in $script_name' ERR
 start_time="$(date +%s)"
 
 IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
-source "${IMPORT}/hue/hue.sh" @import
-source "${IMPORT}/blargparse/args.sh"
+source "${IMPORT}/hue.sh" @import
+source "${IMPORT}/args.sh"
 source "${IMPORT}/common.sh"
 
 ROOT_LABEL=${ROOT_LABEL:-system}
-CHROOT_SCRIPT="${IMPORT:-.}/inside-chroot.sh"
+CHROOT_SCRIPT="${IMPORT}/inside-chroot.sh"
 
 # UEFI system partition location
 export ESP=${ESP:-/boot}

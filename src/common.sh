@@ -13,8 +13,7 @@
 ##
 
 [[ -n "${__COMMON_SH__:-}" ]] && return || __COMMON_SH__=1
-IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
-source "${IMPORT}/hue/hue.sh" @import
+#IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 
 ask() {
   local question="2"

@@ -20,15 +20,10 @@ Vagrant.configure('2') do |config|
     v.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', 0, '--device', 0, '--type', 'hdd', '--medium', second_disk]
   end
 
-  config.vm.provision 'file', source: './src', destination: '.'
-
   config.vm.provision 'shell', inline: <<-SHELL
     set -euo pipefail
     # Some prereqs are missing that are normally present on the Arch live CD
     # pacman --noconfirm -Syu --ignore=kernel --ignore=kernel-headers
     pacman --noconfirm -Sy arch-install-scripts btrfs-progs dosfstools parted
-
-    #./install.sh
-    # run tests
   SHELL
 end
