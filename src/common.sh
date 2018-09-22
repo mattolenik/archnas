@@ -77,7 +77,7 @@ str_repeat() {
 
 # Create a banner in a box
 # $1   - message to print inside the box
-# $2   - padding, default of 2 (optional)
+# $2   - padding, default of 3 (optional)
 # $2/3 - color/style characters (optional)
 #        If padding is passed as $2, then color becomes $3. If padding is
 #        omitted, color becomes $2.
