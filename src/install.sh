@@ -119,7 +119,7 @@ install() {
   parted "$system_device" mkpart primary $((1+BOOT_PART_SIZE+SWAP_PART_SIZE))MiB 100%
 
   local parts
-  readarray parts < <(sfdisk -J "$system_device" | jq -r '.partitiontable.partitions[].node')
+  readarray -t parts < <(sfdisk -J "$system_device" | jq -r '.partitiontable.partitions[].node')
   local boot_part="${parts[0]}"
   local swap_part="${parts[1]}"
   local root_part="${parts[2]}"
@@ -216,7 +216,7 @@ set_user_password() {
 install_prereqs() {
   local prereqs=(jq)
   if ! command -v "${prereqs[0]}" $>/dev/null; then
-    echo `blue "Installing prereqs..."`
+    blue $'Installing prereqs...\n'
     pacman --noconfirm -Syq "${prereqs[@]}"
   fi
 }
