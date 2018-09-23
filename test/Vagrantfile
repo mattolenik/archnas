@@ -1,0 +1,26 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+# Test Vagrantfile
+#
+
+install_disk='../dist/install_disk.vmdk'
+
+Vagrant.configure('2') do |config|
+  config.vm.box = 'generic/arch'
+
+  config.vm.provider 'virtualbox' do |v|
+    v.name = ENV['VM_NAME'] || 'archnas_vagrant'
+    v.customize ['modifyvm', :id, '--firmware', 'efi']
+    v.customize ['storagectl', :id, '--name', 'IDE Controller', '--remove']
+    v.customize ['storagectl', :id, '--name', 'SATA Controller', '--add', 'sata']
+    v.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', 0, '--device', 0, '--type', 'hdd', '--medium', install_disk]
+  end
+
+  config.vm.provision 'shell', inline: <<-SHELL
+    set -euo pipefail
+    # Some prereqs are missing that are normally present on the Arch live CD
+    # pacman --noconfirm -Syu --ignore=kernel --ignore=kernel-headers
+    #pacman --noconfirm -Sy arch-install-scripts btrfs-progs dosfstools parted
+  SHELL
+end
