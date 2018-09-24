@@ -4,13 +4,15 @@
 # Test Vagrantfile
 #
 
-install_disk='../dist/install_disk.vmdk'
+install_disk='../dist/install_disk.vdi'
 
 Vagrant.configure('2') do |config|
   config.vm.box = 'generic/arch'
+  # Plex
+  config.vm.network 'forwarded_port', guest: 32400, host: 3240, host_ip: '127.0.0.1'
 
   config.vm.provider 'virtualbox' do |v|
-    v.name = ENV['VM_NAME'] || 'archnas_vagrant'
+    v.name = ENV['TEST_VM_NAME'] || 'archnas_test'
     v.customize ['modifyvm', :id, '--firmware', 'efi']
     v.customize ['storagectl', :id, '--name', 'IDE Controller', '--remove']
     v.customize ['storagectl', :id, '--name', 'SATA Controller', '--add', 'sata']
@@ -19,8 +21,6 @@ Vagrant.configure('2') do |config|
 
   config.vm.provision 'shell', inline: <<-SHELL
     set -euo pipefail
-    # Some prereqs are missing that are normally present on the Arch live CD
-    # pacman --noconfirm -Syu --ignore=kernel --ignore=kernel-headers
-    #pacman --noconfirm -Sy arch-install-scripts btrfs-progs dosfstools parted
+    # Run tests?
   SHELL
 end

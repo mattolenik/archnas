@@ -20,8 +20,8 @@ main() {
   chown -R "$USERNAME:$USERNAME" "$HOME"
 
   install_yay
-  install_plexpass
-  install_ups
+  #install_plexpass
+  #install_ups
 
   cleanup
 }
@@ -39,7 +39,7 @@ get_github_latest_release() {
 }
 
 install_ups() {
-  su -c "yay -Syu network-ups-tools" -s /bin/sh "$USERNAME"
+  su -c "yay --noconfirm -Syu network-ups-tools" -s /bin/sh "$USERNAME"
   cat <<EOF > /etc/ups/ups.conf
 [ups]
     driver = usbhid-ups
@@ -55,7 +55,7 @@ install_pip() {
 }
 
 install_plexpass() {
-  su -c "yay -Syu plex-media-server-plexpass" -s /bin/sh "$USERNAME"
+  su -c "yay --noconfirm -Syu plex-media-server-plexpass" -s /bin/sh - "$USERNAME"
   write_plex_config
 }
 

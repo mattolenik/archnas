@@ -68,5 +68,7 @@ parse_args() {
 ##
 check_opt() {
   [[ -z $2 ]] && echo "Option $1 expects a value" 1>&2 && return 1
-  [[ $2 =~ $3 ]] || echo "${4:-The value provided for option $2 is not valid}" 1>&2 && return 2
+  if  [[ -n ${3:-} ]]; then
+    [[ $2 =~ $3 ]] || echo "${4:-The value provided for option $2 is not valid}" 1>&2 && return 2
+  fi
 }

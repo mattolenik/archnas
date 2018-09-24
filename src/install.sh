@@ -9,6 +9,9 @@
 # TODO: Copy over public key, defaulting to id_rsa, offer to make new one?
 # TODO: Set up SMB user and SMB shares
 # TODO: Setup ufw
+# TODO: Add help
+# TODO: Copy over custom SSL cert for web UIs
+# TODO: Break into multiple files/functions, groups/tags
 ##
 
 set -euo pipefail
@@ -112,7 +115,6 @@ install() {
 
   wipefs -af "$system_device"
   parted "$system_device" mklabel gpt
-
   parted "$system_device" mkpart primary fat32 1MiB $((1+BOOT_PART_SIZE))MiB
   set 1 esp on
   parted "$system_device" mkpart primary linux-swap $((1+BOOT_PART_SIZE))MiB $((1+BOOT_PART_SIZE+SWAP_PART_SIZE))MiB
@@ -154,7 +156,9 @@ install() {
 
   set_user_password
 
-  umount -R /mnt
+  if ! is_vagrant; then
+    umount -R /mnt
+  fi
 
   [[ -n ${AUTO_APPROVE:-} ]] && return
   read -rp $'\nInstallation complete! Press enter to reboot.\n'
@@ -196,7 +200,7 @@ select_disk() {
 
   local disks
   mapfile -t disks < <(list_disks)
-  select disk in ${disks[@]}; do
+  select disk in "${disks[@]}"; do
     # If input is a number and within the range of options
     if [[ $REPLY =~ ^[0-9]$ ]] && (( REPLY > 0 )) && (( REPLY <= ${#disks[@]} )); then
       read -r "$1" < <(echo "$disk" | awk '{print $1}')
@@ -208,9 +212,18 @@ select_disk() {
 }
 
 set_user_password() {
-  echo
-  echo "`red "One last thing!"` Set the password for `bold "$USERNAME"`"
-  passwd --root /mnt "$USERNAME"
+  if [[ -n ${PASSWORD:-} ]]; then
+    chpasswd --root /mnt <<< "$USERNAME:$PASSWORD"
+
+  elif [[ -n ${AUTO_APPROVE:-} ]] || [[ ! -t 1 ]]; then
+    [[ -z ${PASSWORD:-} ]] && fail "The --password option is required when using --auto-approve or when not in a tty"
+    chpasswd --root /mnt <<< "$USERNAME:$PASSWORD"
+
+  elif [[ -t 1 ]]; then
+    echo
+    echo "`red "One last thing!"` Set the password for `bold "$USERNAME"`"
+    passwd --root /mnt "$USERNAME"
+  fi
 }
 
 install_prereqs() {
@@ -241,7 +254,7 @@ handle_option() {
       check_opt "$opt" "$1"
       TARGET_DISK="$1"
       ;;
-    user)
+    username)
       check_opt "$opt" "$1" "$username_regex" "The username '$1' is not valid"
       USERNAME="$1"
       ;;
@@ -265,8 +278,12 @@ handle_option() {
       check_opt "$opt" "$1" '^[0-9]{4,}$' "swap-size (megabytes) must be an integer value of at least 1000"
       SWAP_PART_SIZE="$1"
       ;;
+    password)
+      check_opt "$opt" "$1"
+      PASSWORD="$1"
+      ;;
     *)
-      fail "Unknown option '$__$2'"
+      fail "Unknown option '$__$opt'"
   esac
 }
 
