@@ -16,8 +16,35 @@ gen_ssh_key() {
 }
 
 main() {
-  ask SSH_KEY $'(Optional) By default, ArchNAS will create an SSH key for you (recommended).\n           You can also enter the path for your own:' "*" "${SSH_KEY:-skip}"
+  boxbanner "Welcome to ArchNAS" "$BOLD_$BLUE"
+  cat - << EOF
+Before installation begins, a few initial steps are required. After you have
+booted the Arch installation media, do the following from the initial command
+prompt:
+
+1. Enable sshd:
+  # systemctl start sshd
+
+2. Set a password (anything) for the root user:
+  # chpasswd <<< root:archnas
+
+3. Find the machine's IP address:
+  # ip address show
+
+Look for your Eth/WiFi device, it likely has a 192.x.x.x or 10.x.x.x IP address,
+which is typical for home routers.
+
+At this point you are ready to proceed with the installation steps below.
+
+EOF
+  printf %s "$GREEN"
+  ask TARGET_IP "(required) Enter the IP of the target machine:" "*"
+  echo
+  ask SSH_KEY $'(optional) By default, ArchNAS will automatically create an SSH key for secure access (recommended).\n           You can also enter the path for your own:' "*" "${SSH_KEY:-skip}"
+  printf %s "$CLR"
+
   [[ $SSH_KEY == skip ]] && SSH_KEY="$(gen_ssh_key "$USER" "$HOST_NAME")"
+  [[ ! -f $SSH_KEY ]] && fail "The SSH key file '$SSH_KEY' does not exist"
 }
 
 main
