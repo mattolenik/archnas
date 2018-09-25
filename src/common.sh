@@ -41,7 +41,7 @@ ask() {
   fi
 
   while true; do
-    read -rp "${!question} ${options_string}" answer
+    read -rp "${!question} ${options_string:-}" answer
     answer="${answer:-${!default:-}}"
     if [[ ${!options:-*} == "*" ]]; then
       # Populate the user-passed in variable
