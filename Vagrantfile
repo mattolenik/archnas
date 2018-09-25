@@ -9,6 +9,7 @@ Vagrant.configure('2') do |config|
     v.name = ENV['VM_NAME'] || 'archnas_vagrant'
     v.customize ['storagectl', :id, '--name', 'SATA Controller', '--add', 'sata']
 
+    # Create a disk and attach it. ArchNAS will be installed onto this disk.
     if !File.exist? install_disk
       v.customize ['createhd', '--filename', install_disk, '--format', 'vdi', '--size', 24 * 1024]
     end
@@ -19,20 +20,26 @@ Vagrant.configure('2') do |config|
 
   config.vm.provision 'shell', inline: <<-SHELL
     set -euo pipefail
-    # pacman --noconfirm -Syu --ignore=kernel --ignore=kernel-headers
+
     # Some prereqs are missing that are normally present on the Arch live CD
     pacman --noconfirm -Sy arch-install-scripts btrfs-progs dosfstools parted
+
+    # Start the installation
     ./install.sh --auto-approve --username vagrant --password vagrant --target-disk /dev/sdb
   SHELL
 
   config.vm.provision 'shell', inline: <<-SHELL
     set -euo pipefail
-    #
+    ##
     # The install disk will be remounted by another Vagrant VM, which will
     # boot and verify the installation. VBox will execute startup.nsh upon
-    # boot, which in turn loads GRUB.
-    #
+    # boot, which in turn loads GRUB, which ultimately boots the new system.
+    ##
     echo 'fs0:EFI\\GRUB\\grubx64.efi' > /mnt/boot/startup.nsh
+
+    # Allow Vagrant to connect over SSH
+    mkdir -p /mnt/home/vagrant/.ssh
+    echo '#{File.read("vagrant.pub").chomp}' >> /mnt/home/vagrant/.ssh/authorized_keys
 
     umount -R /mnt
   SHELL
