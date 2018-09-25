@@ -23,8 +23,8 @@ test: vagrant
 	cd test && vagrant up
 
 clean:
-	vagrant destroy -f
 	cd test && vagrant destroy -f
+	vagrant destroy -f
 	rm -rf dist/
 	rm -rf "$(VBOX_MACHINE_DIR)/$(VM_NAME)"
 	rm -rf "$(VBOX_MACHINE_DIR)/$(TEST_VM_NAME)"
