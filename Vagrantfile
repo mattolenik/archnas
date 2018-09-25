@@ -32,7 +32,7 @@ Vagrant.configure('2') do |config|
     # boot and verify the installation. VBox will execute startup.nsh upon
     # boot, which in turn loads GRUB.
     #
-    echo 'fs0:EFI\GRUB\grubx64.efi' > /boot/startup.nsh
+    echo 'fs0:EFI\\GRUB\\grubx64.efi' > /mnt/boot/startup.nsh
 
     umount -R /mnt
   SHELL
