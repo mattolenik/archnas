@@ -1,6 +1,9 @@
 {
+  "_comment": "This template builds a Vagrant box for ArchNAS. It boots and installs Arch in the same way as a manual installation. The resulting box is equivalent to having installed ArchNAS by hand.",
+
   "variables": {
     "arch_version": "2018.09.01",
+    "iso_checksum": "1649fa7e68a2c5dcc4e48b36ecbb8e318272e746",
     "root_password": "archnas"
   },
   "builders": [
@@ -16,12 +19,12 @@
       "disk_size": 16384,
       "guest_os_type": "Linux_64",
       "iso_urls": [
+	"https://mirrors.kernel.org/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso",
 	"https://mirrors.ocf.berkeley.edu/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso",
-	"https://mirror.lty.me/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso",
-	"https://mirrors.kernel.org/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso"
+	"https://mirror.lty.me/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso"
       ],
       "iso_checksum_type": "sha1",
-      "iso_checksum": "1649fa7e68a2c5dcc4e48b36ecbb8e318272e746",
+      "iso_checksum": "{{user `iso_checksum`}}",
       "iso_interface": "sata",
       "hard_drive_interface": "sata",
       "headless": true,
@@ -29,7 +32,7 @@
       "ssh_username": "root",
       "ssh_password": "{{user `root_password`}}",
       "ssh_port": 22,
-      "ssh_wait_timeout": "10000s",
+      "ssh_wait_timeout": "5m",
       "shutdown_command": "shutdown -P now"
     }
   ],
