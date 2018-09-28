@@ -32,6 +32,7 @@ IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 source "${IMPORT}/hue.sh" @import
 source "${IMPORT}/args.sh"
 source "${IMPORT}/common.sh"
+source "${IMPORT}/geolocation.sh"
 
 ROOT_LABEL=${ROOT_LABEL:-system}
 CHROOT_SCRIPT="${IMPORT}/inside-chroot.sh"
@@ -44,8 +45,10 @@ unset USERNAME
 packages=(
   base
   base-devel
+  bash-completion
   btrfs-progs
   bind-tools
+  dosfstools
   efibootmgr
   git
   grub
@@ -58,6 +61,7 @@ packages=(
   linux-lts
   linux-lts-headers
   lm_sensors
+  lsof
   neovim
   netdata
   monit
@@ -67,6 +71,7 @@ packages=(
   python2
   python2-pip
   ranger
+  rrdtool
   ruby
   rsync
   sudo
@@ -148,7 +153,7 @@ install() {
   genfstab -U /mnt | sed 's/ssd/ssd,discard/' | tee /mnt/etc/fstab
 
   # Perform the part of the install that runs inside the chroot.
-  arch-chroot /mnt /bin/bash < "$CHROOT_SCRIPT"
+  cat "$IMPORT/geolocation.sh" "$CHROOT_SCRIPT" | arch-chroot /mnt /bin/bash
 
   boxbanner "...done!" "$GREEN$BOLD_"
 
@@ -228,11 +233,15 @@ set_user_password() {
 }
 
 install_prereqs() {
-  local prereqs=(jq)
+  local prereqs=(jq reflector)
   if ! command -v "${prereqs[0]}" $>/dev/null; then
     blue $'Installing prereqs...\n'
     pacman --noconfirm -Syq "${prereqs[@]}"
   fi
+  country="$(get_geoip_info "$(get_external_ip)" country_code)"
+  blue "Finding fastest mirrors${country+ in $country}..."
+  echo
+  reflector --verbose --protocol https --sort rate --save /etc/pacman.d/mirrorlist ${country+--country $country}
 }
 
 main() {

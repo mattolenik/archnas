@@ -79,7 +79,8 @@ install_yay() {
 
 setup_clock() {
   # shellcheck disable=SC2155
-  [[ $TIMEZONE == auto-detect ]] && export TIMEZONE="$(get_timezone_by_ip "$(get_external_ip)")"
+  local tz="$(get_geoip_info "$(get_external_ip)" time_zone || true)"
+  [[ $TIMEZONE == auto-detect ]] && export TIMEZONE="${tz:-UTC}"
   echo "Setting timezone to $TIMEZONE"
   ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
   hwclock --systohc
@@ -98,19 +99,6 @@ set_hostname() {
   echo "127.0.0.1 $hostname.$domain $hostname" >> /etc/hosts
 }
 
-get_external_ip() {
-  local output
-  if ! output=$(dig +short myip.opendns.com @resolver1.opendns.com); then
-    echo NULL
-  fi
-  echo "$output"
-}
-
-get_timezone_by_ip() {
-  [[ $1 == NULL ]] && echo UTC && return
-  # Try to resolve timezone by geolocation of IP, default to UTC in case of failure
-  curl --max-time 30 --fail --silent "https://freegeoip.app/json/$1" 2>/dev/null | jq -r .time_zone || echo UTC
-}
 
 setup_users() {
   echo "%wheel ALL=(ALL) ALL"   > /etc/sudoers.d/wheel

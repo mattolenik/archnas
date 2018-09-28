@@ -1,5 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
+
+# This Vagrant VM verifies the installation and configuration of ArchNAS.
 Vagrant.configure('2') do |config|
   config.vm.box = 'olenik/archnas'
 
@@ -9,7 +11,6 @@ Vagrant.configure('2') do |config|
   end
 
   config.vm.provision 'shell', inline: <<-SHELL
-    set -euo pipefail
-    # Run tests?
+  echo hello
   SHELL
 end

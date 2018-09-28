@@ -16,43 +16,43 @@
 #IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 
 ask() {
-  local question="2"
-  local options="3"
-  local default="4"
-  local answer
+  local _question="2"
+  local _options="3"
+  local _default="4"
+  local _answer
 
   # If AUTO_APPROVE is set, just return the default.
   if [[ -n ${AUTO_APPROVE:-} ]]; then
-    read -r "$1" <<< "${!default:-}"
+    read -r "$1" <<< "${!_default:-}"
     return
   fi
 
   # If default is set and not empty
-  if [[ -n "${!default:-}" ]]; then
-    local options_string="${!options+${!options// /\/} }"
-    if [[ ${!options:-*} == * ]]; then
-      options_string="[${!default}] "
-    elif [[ $options_string != *"${!default}"* ]]; then
+  if [[ -n "${!_default:-}" ]]; then
+    local _options_string="${!_options+${!_options// /\/} }"
+    if [[ ${!_options:-*} == * ]]; then
+      _options_string="[${!_default}] "
+    elif [[ $_options_string != *"${!_default}"* ]]; then
       echo "Default value does not appear in the options list" && return 3
     else
       # Make the default option appear in uppercase
-      options_string="(${options_string/${!default}/${!default^^}})"
+      _options_string="(${_options_string/${!_default}/${!_default^^}})"
     fi
   fi
 
   while true; do
-    read -rp "${!question} ${options_string:-}" answer
-    answer="${answer:-${!default:-}}"
-    if [[ ${!options:-*} == "*" ]]; then
+    read -rp "${!_question} ${_options_string:-}" _answer
+    _answer="${_answer:-${!_default:-}}"
+    if [[ ${!_options:-*} == "*" ]]; then
       # Populate the user-passed in variable
-      read -r "$1" <<< "$answer"
+      read -r "$1" <<< "$_answer"
       return
     fi
     # Trim and collapse whitespace and convert to lowercase
-    local normal_opts="$(printf %s "${!options}" | xargs echo -n | awk '{print tolower($0)}')"
+    local normal_opts="$(printf %s "${!_options}" | xargs echo -n | awk '{print tolower($0)}')"
     local opt_pattern='^('"${normal_opts// /|}"')$'
-    if [[ $answer =~ $opt_pattern ]]; then
-      read -r "$1" <<< "$answer"
+    if [[ $_answer =~ $opt_pattern ]]; then
+      read -r "$1" <<< "$_answer"
       return
     else
       echo "ERROR: Invalid option, must be one of: ${normal_opts// /, }"

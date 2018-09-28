@@ -16,16 +16,15 @@
       "disk_size": 16384,
       "guest_os_type": "Linux_64",
       "iso_urls": [
-	"https://mirrors.edge.kernel.org/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso",
-	"https://mirrors.lug.mtu.edu/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso",
-	"https://mirrors.rit.edu/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso"
+	"https://mirrors.ocf.berkeley.edu/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso",
+	"https://mirror.lty.me/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso",
+	"https://mirrors.kernel.org/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso"
       ],
       "iso_checksum_type": "sha1",
       "iso_checksum": "1649fa7e68a2c5dcc4e48b36ecbb8e318272e746",
       "iso_interface": "sata",
       "hard_drive_interface": "sata",
       "headless": true,
-      "output_directory": "dist",
       "guest_additions_mode": "disable",
       "ssh_username": "root",
       "ssh_password": "{{user `root_password`}}",
@@ -48,6 +47,8 @@
 	"./install.sh --auto-approve --username vagrant --password vagrant --target-disk /dev/sda",
 	"# startup.nsh is executed by the EFI shell. This line starts GRUB at boot.",
 	"echo 'fs0:EFI\\GRUB\\grubx64.efi' > /mnt/boot/startup.nsh",
+	"mkdir -p /mnt/home/vagrant/.ssh",
+	"echo 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA6NF8iallvQVp22WDkTkyrtvp9eWW6A8YVr+kz4TjGYe7gHzIw+niNltGEFHzD8+v1I2YJ6oXevct1YeS0o9HZyN1Q9qgCgzUFtdOKLv6IedplqoPkcmF0aYet2PkEDo3MlTBckFXPITAMzF8dJSIFo9D8HfdOV0IAdx4O7PtixWKn5y2hMNG0zQPyUecp4pzC6kivAIhyfHilFR61RGL+GPXQ2MWZWFYbAGjyiYJnAmCP3NOTd0jMZEnDkbUvxhMmBYSdETk1rRgm+R4LOzFUGaHqHDLKLX+FIPKcF96hrucXzcWyLbIbEgE98OHlnVYCzRdK8jlqm8tehUc9c9WhQ== vagrant insecure public key' >> /mnt/home/vagrant/.ssh/authorized_keys",
 	"umount -R /mnt"
       ]
     },
@@ -60,11 +61,9 @@
   ],
 
   "post-processors": [
-    [
-      {
-	"output": "dist/archnas.box",
-	"type": "vagrant"
-      }
-    ]
+    {
+      "output": "dist/archnas.box",
+      "type": "vagrant"
+    }
   ]
 }
