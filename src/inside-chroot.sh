@@ -20,7 +20,7 @@ main() {
   chown -R "$USERNAME:$USERNAME" "$HOME"
 
   install_yay
-  #install_plexpass
+  install_plexpass
   #install_ups
 
   cleanup
@@ -55,7 +55,7 @@ install_pip() {
 }
 
 install_plexpass() {
-  su -c "yay --noconfirm -Syu plex-media-server-plexpass" -s /bin/sh - "$USERNAME"
+  sudo -u "$USERNAME" -s -c "yay --noconfirm -Syu plex-media-server-plexpass"
   # Plex config
   conf=/etc/systemd/system/plexmediaserver.service.d/restrict.conf
   mkdir -p "$(dirname "$conf")"
