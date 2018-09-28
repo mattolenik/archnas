@@ -11,7 +11,9 @@ clean:
 	vagrant destroy -f
 	rm -rf dist/
 	rm -rf output-*/
+
+scrub: clean
 	rm -rf packer_cache/
 	rm -rf .vagrant/
 
-.PHONY: clean test
+.PHONY: clean scrub test
