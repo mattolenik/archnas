@@ -12,6 +12,7 @@
 # TODO: Add help
 # TODO: Copy over custom SSL cert for web UIs
 # TODO: Break into multiple files/functions, groups/tags
+# TODO: Install AUR packages
 ##
 
 set -euo pipefail
@@ -84,8 +85,8 @@ ignore_packages=(
   linux-headers
 )
 
-is_vagrant() {
-  [[ -d /home/vagrant ]]
+is_test() {
+  [[ -n ${IS_TEST:-} ]]
 }
 
 install() {
@@ -104,7 +105,7 @@ install() {
   local system_device
   select_disk system_device
 
-  is_vagrant || timedatectl set-ntp true
+  is_test || timedatectl set-ntp true
 
   boxbanner "Installing..." "$GREEN$BOLD_"
   echo
@@ -127,7 +128,7 @@ install() {
   local root_part="${parts[2]}"
 
   # Create partitions
-  if ! is_vagrant; then
+  if ! is_test; then
     mkswap "$swap_part"
     swapon "$swap_part"
   fi
@@ -156,7 +157,7 @@ install() {
 
   set_user_password
 
-  if ! is_vagrant; then
+  if ! is_test; then
     umount -R /mnt
   fi
 

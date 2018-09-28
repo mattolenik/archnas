@@ -1,0 +1,70 @@
+{
+  "variables": {
+    "arch_version": "2018.09.01",
+    "root_password": "archnas"
+  },
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "vm_name": "archnas_packer",
+      "boot_command": [
+	"<enter><wait30s>",
+	"systemctl start sshd<enter>",
+	"chpasswd <<< root:{{user `root_password`}}<enter>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": 16384,
+      "guest_os_type": "Linux_64",
+      "iso_urls": [
+	"https://mirrors.edge.kernel.org/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso",
+	"https://mirrors.lug.mtu.edu/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso",
+	"https://mirrors.rit.edu/archlinux/iso/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso"
+      ],
+      "iso_checksum_type": "sha1",
+      "iso_checksum": "1649fa7e68a2c5dcc4e48b36ecbb8e318272e746",
+      "iso_interface": "sata",
+      "hard_drive_interface": "sata",
+      "headless": true,
+      "output_directory": "dist",
+      "guest_additions_mode": "disable",
+      "ssh_username": "root",
+      "ssh_password": "{{user `root_password`}}",
+      "ssh_port": 22,
+      "ssh_wait_timeout": "10000s",
+      "shutdown_command": "shutdown -P now"
+    }
+  ],
+
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "src/",
+      "destination": "/root/"
+    },
+    {
+      "type": "shell",
+      "inline": [
+	"export IS_TEST=1",
+	"./install.sh --auto-approve --username vagrant --password vagrant --target-disk /dev/sda",
+	"# startup.nsh is executed by the EFI shell. This line starts GRUB at boot.",
+	"echo 'fs0:EFI\\GRUB\\grubx64.efi' > /mnt/boot/startup.nsh",
+	"umount -R /mnt"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "install.log",
+      "destination": "dist/install.log",
+      "direction": "download"
+    }
+  ],
+
+  "post-processors": [
+    [
+      {
+	"output": "dist/archnas.box",
+	"type": "vagrant"
+      }
+    ]
+  ]
+}

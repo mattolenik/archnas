@@ -1,4 +1,3 @@
 *.log
-.vagrant/
-.ssh_config
 dist/
+packer_cache/

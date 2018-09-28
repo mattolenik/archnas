@@ -56,7 +56,14 @@ install_pip() {
 
 install_plexpass() {
   su -c "yay --noconfirm -Syu plex-media-server-plexpass" -s /bin/sh - "$USERNAME"
-  write_plex_config
+  # Plex config
+  conf=/etc/systemd/system/plexmediaserver.service.d/restrict.conf
+  mkdir -p "$(dirname "$conf")"
+  cat << 'EOF' > "$conf"
+[Service]
+ReadOnlyDirectories=/
+ReadWriteDirectories=/var/lib/plex /tmp
+EOF
 }
 
 install_yay() {
@@ -168,17 +175,7 @@ setup_services() {
     sshd
     ufw
   )
-  systemctl enable ${services[@]}
-}
-
-write_plex_config() {
-  conf=/etc/systemd/system/plexmediaserver.service.d/restrict.conf
-  mkdir -p "$(dirname "$conf")"
-  cat << 'EOF' > "$conf"
-[Service]
-ReadOnlyDirectories=/
-ReadWriteDirectories=/var/lib/plex /tmp
-EOF
+  systemctl enable "${services[@]}"
 }
 
 main "$@"

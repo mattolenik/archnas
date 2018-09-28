@@ -1,22 +1,11 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-#
-# Test Vagrantfile
-#
-
-install_disk='../dist/install_disk.vdi'
-
 Vagrant.configure('2') do |config|
-  config.vm.box = 'generic/arch'
-  # Plex
-  config.vm.network 'forwarded_port', guest: 32400, host: 3240, host_ip: '127.0.0.1'
+  config.vm.box = 'olenik/archnas'
 
   config.vm.provider 'virtualbox' do |v|
-    v.name = ENV['TEST_VM_NAME'] || 'archnas_test'
+    v.name = 'archnas_test'
     v.customize ['modifyvm', :id, '--firmware', 'efi']
-    v.customize ['storagectl', :id, '--name', 'IDE Controller', '--remove']
-    v.customize ['storagectl', :id, '--name', 'SATA Controller', '--add', 'sata']
-    v.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', 0, '--device', 0, '--type', 'hdd', '--medium', install_disk]
   end
 
   config.vm.provision 'shell', inline: <<-SHELL
