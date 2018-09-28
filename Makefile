@@ -4,7 +4,7 @@ dist/archnas.box: archnas-box.json
 	packer build -force archnas-box.json
 
 test: dist/archnas.box
-	vagrant box add dist/archnas.box --name olenik/archnas --force
+	vagrant box add dist/archnas.box --name archnas/archnas --force
 	vagrant up
 
 clean:

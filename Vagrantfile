@@ -3,7 +3,7 @@
 
 # This Vagrant VM verifies the installation and configuration of ArchNAS.
 Vagrant.configure('2') do |config|
-  config.vm.box = 'olenik/archnas'
+  config.vm.box = 'archnas/archnas'
 
   config.vm.provider 'virtualbox' do |v|
     v.name = 'archnas_test'
