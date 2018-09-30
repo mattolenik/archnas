@@ -8,7 +8,7 @@ start: dist/archnas.box
 	vagrant up
 
 test: start
-	vagrant ssh -c '$$HOME/test/bats/bin tests.bats'
+	vagrant ssh -c './tests.bats'
 	vagrant down
 	vagrant destroy -f
 
@@ -21,4 +21,4 @@ scrub: clean
 	rm -rf packer_cache/
 	rm -rf .vagrant/
 
-.PHONY: clean scrub test
+.PHONY: clean scrub start test
