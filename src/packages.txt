@@ -3,6 +3,7 @@ base-devel
 bash-completion
 btrfs-progs
 bind-tools
+docker
 dosfstools
 efibootmgr
 git
@@ -24,6 +25,7 @@ nodejs
 npm
 monit
 openssh
+openvpn
 python
 python-pip
 python2
