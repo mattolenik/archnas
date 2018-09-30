@@ -11,8 +11,5 @@ Vagrant.configure('2') do |config|
     v.customize ['modifyvm', :id, '--firmware', 'efi']
   end
 
-  config.vm.provision 'shell', privileged: false, inline: <<-SHELL
-  set -euo pipefail
-  # Run some tests here
-  SHELL
+  config.vm.provision 'file', source: 'test', destination: '.'
 end
