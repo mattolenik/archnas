@@ -14,6 +14,7 @@ main() {
   set_locale "$LOCALE"
   set_hostname "$HOST_NAME" "$DOMAIN"
   setup_services
+  setup_ufw
 
   grub-install --target=x86_64-efi --efi-directory="$ESP" --bootloader-id=GRUB
   grub-mkconfig -o /boot/grub/grub.cfg
@@ -106,6 +107,28 @@ set_hostname() {
   echo "127.0.0.1 $hostname.$domain $hostname" >> /etc/hosts
 }
 
+setup_ufw() {
+  ufw enable
+  ufw default allow outgoing
+  ufw default deny incoming
+  ufw allow ssh
+  ufw limit ssh
+
+  # Plex
+  ufw allow 32400
+  # Plex GDM network discovery
+  ufw allow 32410/udp
+  ufw allow 32412:32414/udp
+  # Plex DLNA
+  ufw allow 32469/tcp
+  ufw allow 1900/udp
+
+  # CIFS
+  ufw allow 137:138/udp
+  ufw allow 139/tcp
+  ufw allow 445/tcp
+
+}
 
 setup_users() {
   echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/10-wheel
