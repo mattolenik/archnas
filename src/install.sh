@@ -16,7 +16,7 @@
 ##
 
 set -euo pipefail
-[[ -n ${TRACE:-} ]] && set -x
+[[ -n ${TRACE:-} ]] && set -x && export TRACE
 [[ $(uname -r) != *ARCH* ]] && echo "This script can only run on Arch Linux!" && exit 1
 
 # Elevate to root if necessary, usually only needed during testing
@@ -42,57 +42,12 @@ export ESP=${ESP:-/boot}
 
 unset USERNAME
 
-packages=(
-  base
-  base-devel
-  bash-completion
-  btrfs-progs
-  bind-tools
-  dosfstools
-  efibootmgr
-  git
-  grub
-  htop
-  intel-ucode
-  jq
-  libva-intel-driver
-  libvdpau-va-gl
-  libutil-linux
-  linux-lts
-  linux-lts-headers
-  lm_sensors
-  lsof
-  neovim
-  netdata
-  monit
-  openssh
-  python
-  python-pip
-  python2
-  python2-pip
-  ranger
-  rrdtool
-  ruby
-  rsync
-  sudo
-  samba
-  snapper
-  smartmontools
-  syncthing
-  tmux
-  ufw
-  wget
-  zsh
-)
+strip_comments() { grep -Ev '^[[:blank:]]*$|#' "$1"; }
 
-ignore_packages=(
-  linux
-  linux-headers
-)
+readarray -t packages < <(strip_comments packages.txt)
+readarray -t ignore_packages < <(strip_comments ignore-packages.txt)
 
-is_test() {
-  [[ -n ${IS_TEST:-} ]]
-}
+is_test() { [[ -n ${IS_TEST:-} ]]; }
 
 install() {
   ask LOCALE "Enter a locale" "*" "${LOCALE:-en_US}"
@@ -110,7 +65,7 @@ install() {
   local system_device
   select_disk system_device
 
-  is_test || timedatectl set-ntp true
+  timedatectl set-ntp true
 
   boxbanner "Installing..." "$GREEN$BOLD_"
   echo
@@ -133,10 +88,8 @@ install() {
   local root_part="${parts[2]}"
 
   # Create partitions
-  if ! is_test; then
-    mkswap "$swap_part"
-    swapon "$swap_part"
-  fi
+  mkswap "$swap_part"
+  swapon "$swap_part"
   mkfs.fat -F32 "$boot_part"
   mkfs.btrfs -f -L "$ROOT_LABEL" "$root_part"
 
@@ -241,7 +194,7 @@ install_prereqs() {
   country="$(get_geoip_info "$(get_external_ip)" country_code)"
   blue "Finding fastest mirrors${country+ in $country}..."
   echo
-  reflector --verbose --protocol https --sort rate --save /etc/pacman.d/mirrorlist ${country+--country $country}
+  reflector --verbose --protocol https --sort score --save /etc/pacman.d/mirrorlist ${country+--country $country}
 }
 
 main() {

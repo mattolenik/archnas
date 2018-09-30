@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+[[ -n ${TRACE:-} ]] && set -x && export TRACE
 set -euo pipefail
 trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
 HOME="/home/$USERNAME"
@@ -21,7 +22,7 @@ main() {
 
   install_yay
   install_plexpass
-  #install_ups
+  install_ups
 
   cleanup
 }
@@ -32,6 +33,8 @@ cleanup() {
   # Remove bash and zsh history from all users
   # shellcheck disable=SC2038
   find /root /home -type f \( -name .bash_history -o -name .zsh_history \) | xargs rm -f
+  # Remove temporary nopasswd on sudo
+  rm /etc/sudoers.d/20-wheel
 }
 
 get_github_latest_release() {
@@ -39,7 +42,7 @@ get_github_latest_release() {
 }
 
 install_ups() {
-  su -c "yay --noconfirm -Syu network-ups-tools" -s /bin/sh "$USERNAME"
+  yay_install network-ups-tools
   cat <<EOF > /etc/ups/ups.conf
 [ups]
     driver = usbhid-ups
@@ -54,8 +57,12 @@ install_pip() {
   pip2 install neovim
 }
 
+yay_install() {
+  sudo -u "$USERNAME" yay --noconfirm -Sy "$@"
+}
+
 install_plexpass() {
-  sudo -u "$USERNAME" -s -c "yay --noconfirm -Syu plex-media-server-plexpass"
+  yay_install plex-media-server-plexpass
   # Plex config
   conf=/etc/systemd/system/plexmediaserver.service.d/restrict.conf
   mkdir -p "$(dirname "$conf")"
@@ -101,7 +108,9 @@ set_hostname() {
 
 
 setup_users() {
-  echo "%wheel ALL=(ALL) ALL"   > /etc/sudoers.d/wheel
+  echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/10-wheel
+  # Temporarily override the first entry and lift password requirement during setup
+  echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/20-wheel
   echo "Defaults lecture = never" > /etc/sudoers.d/disable-lecture
   echo "PermitRootLogin no" >> /etc/ssh/sshd_config
   useradd -d "$HOME" -G wheel -s "$(command -v zsh)" "$USERNAME"
