@@ -194,7 +194,7 @@ install_prereqs() {
   country="$(get_geoip_info "$(get_external_ip)" country_code)"
   blue "Finding fastest mirrors${country+ in $country}..."
   echo
-  reflector --verbose --protocol https --sort score --save /etc/pacman.d/mirrorlist ${country+--country $country}
+  reflector --verbose --protocol https --sort rate --save /etc/pacman.d/mirrorlist ${country+--country $country}
 }
 
 main() {
