@@ -12,4 +12,11 @@ Vagrant.configure('2') do |config|
   end
 
   config.vm.provision 'file', source: 'test', destination: '.'
+
+  config.vm.provision 'shell', privileged: false, inline: <<-SHELL
+  set -euo pipefail
+  # Install Bats and add it to the path
+  sudo -S bats/install.sh "$HOME" <<< "vagrant"
+  echo 'export PATH="$HOME/bin:$PATH" >> "$HOME/.bashrc"
+  SHELL
 end
