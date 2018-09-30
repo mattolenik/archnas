@@ -113,8 +113,9 @@ setup_users() {
   echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/20-wheel
   echo "Defaults lecture = never" > /etc/sudoers.d/disable-lecture
   echo "PermitRootLogin no" >> /etc/ssh/sshd_config
-  useradd -d "$HOME" -G wheel -s "$(command -v zsh)" "$USERNAME"
-  mkdir -p "$HOME"
+  useradd -d "$HOME" -G docker wheel -s "$(command -v zsh)" "$USERNAME"
+  mkdir -p "$HOME/.ssh"
+  touch "$HOME/.ssh/authorized_keys"
   passwd -l root
 }
 
@@ -167,6 +168,7 @@ SHELL
 setup_services() {
   services=(
     dhcpcd
+    docker
     nmb
     smb
     sshd
