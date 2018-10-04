@@ -1,5 +1,5 @@
 #!/usr/bin/env bats
-source testutils.sh
+load testutils
 
 @test "check_plex_web" {
   http_get body status_code "http://127.0.0.1:32400"

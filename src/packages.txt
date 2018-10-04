@@ -10,13 +10,14 @@ git
 grub
 htop
 intel-ucode
+jre10-openjdk-headless
 jre8-openjdk-headless
 jq
 libva-intel-driver
 libvdpau-va-gl
 libutil-linux
-linux-lts
-linux-lts-headers
+#linux-lts
+#linux-lts-headers
 lm_sensors
 lsof
 neovim

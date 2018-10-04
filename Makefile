@@ -8,7 +8,7 @@ start: dist/archnas.box
 	vagrant up
 
 test: start
-	vagrant ssh -c './tests.bats'
+	vagrant ssh -c 'bats tests.bats'
 	vagrant down
 	vagrant destroy -f
 

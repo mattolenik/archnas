@@ -32,7 +32,11 @@
       "ssh_password"         : "{{user `root_password`}}",
       "ssh_port"             : 22,
       "ssh_wait_timeout"     : "5m",
-      "shutdown_command"     : "shutdown -P now"
+      "shutdown_command"     : "shutdown -P now",
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--memory", "4096"],
+        ["modifyvm", "{{.Name}}", "--cpus", "3"]
+      ]
     }
   ],
   "provisioners" : [

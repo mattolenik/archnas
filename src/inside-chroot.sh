@@ -3,27 +3,33 @@
 set -euo pipefail
 trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
 HOME="/home/$USERNAME"
+FIRSTBOOT="$HOME/firstboot.sh"
 
 main() {
-  setup_users
-  setup_zsh
-  setup_bash
-
-  install_pip
   setup_clock
   set_locale "$LOCALE"
   set_hostname "$HOST_NAME" "$DOMAIN"
+
+  # Packages
+  install_pip
+
+  # Root setup steps
   setup_services
-  setup_ufw
+  write_firstboot_func firstboot_ufw
+  setup_smb
 
-  grub-install --target=x86_64-efi --efi-directory="$ESP" --bootloader-id=GRUB
-  grub-mkconfig -o /boot/grub/grub.cfg
-
+  # User setup and preferences
+  setup_users
+  setup_zsh
+  setup_bash
   chown -R "$USERNAME:$USERNAME" "$HOME"
 
+  # User install steps
   install_yay
   install_plexpass
   install_ups
+
+  install_bootloader
 
   cleanup
 }
@@ -40,6 +46,12 @@ cleanup() {
 
 get_github_latest_release() {
   curl -s "https://api.github.com/repos/$1/releases/latest" | jq -r '.assets[].browser_download_url'
+}
+
+install_bootloader() {
+  grub-install --target=x86_64-efi --efi-directory="$ESP" --bootloader-id=GRUB
+  grub-mkconfig -o /boot/grub/grub.cfg
+
 }
 
 install_ups() {
@@ -72,6 +84,19 @@ install_plexpass() {
 ReadOnlyDirectories=/
 ReadWriteDirectories=/var/lib/plex /tmp
 EOF
+  write_firstboot_func "firstboot_plex"
+}
+
+firstboot_plex() {
+  # Firewall rules
+  # Plex general port
+  ufw allow 32400
+  # Plex GDM network discovery
+  ufw allow 32410/udp
+  ufw allow 32412:32414/udp
+  # Plex DLNA
+  ufw allow 32469/tcp
+  ufw allow 1900/udp
 }
 
 install_yay() {
@@ -100,34 +125,50 @@ set_locale() {
   locale-gen
 }
 
+# Sets hostname and domain
+# $1 - hostname
+# $2 - domain
 set_hostname() {
-  local hostname="$1"
-  local domain="$2"
-  echo "$hostname" > /etc/hostname
-  echo "127.0.0.1 $hostname.$domain $hostname" >> /etc/hosts
+  echo "$1" > /etc/hostname
+  echo "127.0.0.1 $1.$2 $1" >> /etc/hosts
 }
 
-setup_ufw() {
+# Appends a string to the firstboot script
+# $@ - all args are appended as a string
+write_firstboot() {
+  if [[ ! -f "$FIRSTBOOT" ]]; then
+    cat << EOF > "$FIRSTBOOT"
+#!/usr/bin/env bash
+set -euo pipefail
+
+EOF
+  chmod +x "$FIRSTBOOT"
+  fi
+  echo "$@" >> "$FIRSTBOOT"
+}
+
+write_firstboot_func() {
+  write_firstboot "$(type "$1")"
+  write_firstboot "$1"
+}
+
+firstboot_ufw() {
   ufw enable
   ufw default allow outgoing
   ufw default deny incoming
   ufw allow ssh
   ufw limit ssh
+}
 
-  # Plex
-  ufw allow 32400
-  # Plex GDM network discovery
-  ufw allow 32410/udp
-  ufw allow 32412:32414/udp
-  # Plex DLNA
-  ufw allow 32469/tcp
-  ufw allow 1900/udp
+setup_smb() {
+  write_firstboot_func firstboot_smb
+}
 
+firstboot_smb() {
   # CIFS
   ufw allow 137:138/udp
   ufw allow 139/tcp
   ufw allow 445/tcp
-
 }
 
 setup_users() {
@@ -136,7 +177,7 @@ setup_users() {
   echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/20-wheel
   echo "Defaults lecture = never" > /etc/sudoers.d/disable-lecture
   echo "PermitRootLogin no" >> /etc/ssh/sshd_config
-  useradd -d "$HOME" -G docker wheel -s "$(command -v zsh)" "$USERNAME"
+  useradd -d "$HOME" -G docker,wheel -s "$(command -v zsh)" "$USERNAME"
   mkdir -p "$HOME/.ssh"
   touch "$HOME/.ssh/authorized_keys"
   passwd -l root
