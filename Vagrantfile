@@ -15,7 +15,7 @@ Vagrant.configure('2') do |config|
 
   config.vm.provision 'shell', privileged: false, inline: <<-SHELL
   set -euo pipefail
-  # Install Bats and add it to the path
-  (cd bats; echo vagrant | sudo -S ./install.sh /usr/local)
+  # Install Bats
+  sudo -S bats/install.sh /usr/local <<< "vagrant"
   SHELL
 end
