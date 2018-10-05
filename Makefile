@@ -1,4 +1,4 @@
-default: test
+default: testrun
 
 dist/archnas.box: archnas-box.json
 	packer build -force archnas-box.json
@@ -7,10 +7,13 @@ start: dist/archnas.box
 	vagrant box add dist/archnas.box --name archnas/archnas --force
 	vagrant up
 
-test: start
-	vagrant ssh -c 'bats tests.bats'
+testrun: start
+	vagrant ssh -c './tests.bats'
 	vagrant down
 	vagrant destroy -f
+
+test:
+	vagrant ssh -c './tests.bats'
 
 clean:
 	vagrant destroy -f
@@ -21,4 +24,4 @@ scrub: clean
 	rm -rf packer_cache/
 	rm -rf .vagrant/
 
-.PHONY: clean scrub start test
+.PHONY: clean scrub start test testrun
