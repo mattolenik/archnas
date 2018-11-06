@@ -10,6 +10,7 @@ main() {
   set_locale "$LOCALE"
   set_hostname "$HOST_NAME" "$DOMAIN"
 
+  pacman -Syu
   # Packages
   install_pip
 
@@ -28,6 +29,7 @@ main() {
   install_yay
   install_plexpass
   install_ups
+  install_go
 
   install_bootloader
 
@@ -85,6 +87,7 @@ ReadOnlyDirectories=/
 ReadWriteDirectories=/var/lib/plex /tmp
 EOF
   write_firstboot_func "firstboot_plex"
+  systemctl enable plexmediaserver
 }
 
 firstboot_plex() {
@@ -108,6 +111,14 @@ install_yay() {
     mv bash /etc/bashrc.d/yay
     mv zsh /etc/zshrc.d/yay
   )
+}
+
+install_go() {
+  pacman --noconfirm -S go
+  cat << EOF >> /etc/profile.d/go.sh
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:$PATH"
+EOF
 }
 
 setup_clock() {

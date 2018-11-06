@@ -17,5 +17,6 @@ Vagrant.configure('2') do |config|
   set -euo pipefail
   # Install Bats
   sudo -S bats/install.sh /usr/local <<< "vagrant"
+  go get github.com/ericchiang/pup
   SHELL
 end

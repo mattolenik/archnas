@@ -37,15 +37,16 @@ source "${IMPORT}/geolocation.sh"
 ROOT_LABEL=${ROOT_LABEL:-system}
 CHROOT_SCRIPT="${IMPORT}/inside-chroot.sh"
 
+PACKAGE_FILE="packages.txt"
+PACKAGE_IGNORE_FILE="packages-ignore.txt"
+
 # UEFI system partition location
 export ESP=${ESP:-/boot}
 
 unset USERNAME
 
-strip_comments() { grep -Ev '^[[:blank:]]*$|#' "$1"; }
-
-readarray -t packages < <(strip_comments packages.txt)
-readarray -t ignore_packages < <(strip_comments ignore-packages.txt)
+COMMENT_REGEX='^[[:blank:]]*$|#'
+strip_comments() { grep -Ev  "$1"; }
 
 is_test() { [[ -n ${IS_TEST:-} ]]; }
 
@@ -99,8 +100,12 @@ install() {
   mkdir -p "/mnt${ESP}"
   mount "$boot_part" "/mnt${ESP}"
 
-  # Only attach the "--ignore <packages>" part if ignore_packages is unempty
-  pacstrap /mnt "${packages[@]}" ${ignore_packages+--ignore "${ignore_packages[@]}"}
+  local packages packages_ignore
+  # The following installs 'base' but without the 'linux' package.
+  # This allows the desired kernel, e.g. 'linux-lts', it to be specified in the "$PACKAGE_FILE"
+  readarray -t packages < <(pacman -Sgq base | grep -Ev '^linux$' | cat - "$PACKAGE_FILE" | grep -Ev "$COMMENT_REGEX" | sort -u)
+  readarray -t packages_ignore < <(grep -Ev "$COMMENT_REGEX" "$PACKAGE_IGNORE_FILE" | sort -u)
+  packstrap /mnt "${packages[@]}" "${packages_ignore+--ignore ${packages_ignore[@]}}"
 
   # Add discard flag to enable SSD trim. Tee is used to echo the contents to the screen for debugging.
   genfstab -U /mnt | sed 's/ssd/ssd,discard/' | tee /mnt/etc/fstab

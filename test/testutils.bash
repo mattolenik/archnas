@@ -17,3 +17,7 @@ http_get() {
   read -r "$2" < <(tail -n1 <<< "$result")
   (( err != 0 )) && return $err
 }
+
+fail() {
+  echo "$@" && return 1
+}

@@ -1,5 +1,5 @@
-base
 base-devel
+bash
 bash-completion
 btrfs-progs
 bind-tools
@@ -16,8 +16,8 @@ jq
 libva-intel-driver
 libvdpau-va-gl
 libutil-linux
-#linux-lts
-#linux-lts-headers
+linux-lts
+linux-lts-headers
 lm_sensors
 lsof
 neovim
@@ -46,3 +46,4 @@ virtualbox
 virtualbox-host-dkms
 wget
 zsh
+zsh-completions
