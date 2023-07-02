@@ -12,7 +12,7 @@ main() {
 
   pacman -Syu
   # Packages
-  install_pip
+  upgrade_pip
 
   # Root setup steps
   setup_services
@@ -65,11 +65,13 @@ install_ups() {
 EOF
 }
 
-install_pip() {
+upgrade_pip() {
   pip install pip --upgrade
   pip2 install pip --upgrade
-  pip install neovim
-  pip2 install neovim
+}
+
+install_zfs() {
+  yay_install zfs-dkms
 }
 
 yay_install() {
@@ -242,7 +244,6 @@ SHELL
 
 setup_services() {
   services=(
-    dhcpcd
     docker
     nmb
     smb

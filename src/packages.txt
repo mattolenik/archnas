@@ -4,6 +4,7 @@ bash-completion
 btrfs-progs
 bind-tools
 docker
+docker-compose
 dosfstools
 efibootmgr
 git
@@ -13,6 +14,7 @@ intel-ucode
 jre10-openjdk-headless
 jre8-openjdk-headless
 jq
+lf
 libva-intel-driver
 libvdpau-va-gl
 libutil-linux
@@ -29,8 +31,6 @@ openssh
 openvpn
 python
 python-pip
-python2
-python2-pip
 ranger
 rrdtool
 ruby
