@@ -56,11 +56,13 @@ install() {
   ask HOST_NAME "Enter a hostname" "*" "${HOST_NAME:-archnas}"
   ask DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
   ask TIMEZONE "Enter timezone" "*" "${TIMEZONE:-auto-detect}"
+  ask GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
   export LOCALE=${LOCALE:-"en_US"}
   export USERNAME
   export HOST_NAME
   export DOMAIN
   export TIMEZONE
+  export GITHUB_USERNAME
 
   echo
   local system_device
@@ -107,8 +109,8 @@ install() {
   readarray -t packages_ignore < <(grep -Ev "$COMMENT_REGEX" "$PACKAGE_IGNORE_FILE" | sort -u)
   packstrap /mnt "${packages[@]}" "${packages_ignore+--ignore ${packages_ignore[@]}}"
 
-  # Add discard flag to enable SSD trim. Tee is used to echo the contents to the screen for debugging.
-  genfstab -U /mnt | sed 's/ssd/ssd,discard/' | tee /mnt/etc/fstab
+  # Generate mounty stuff
+  genfstab -U /mnt | tee /mnt/etc/fstab
 
   # Perform the part of the install that runs inside the chroot.
   cat "$IMPORT/geolocation.sh" "$CHROOT_SCRIPT" | arch-chroot /mnt /bin/bash
@@ -241,6 +243,10 @@ handle_option() {
     timezone)
       check_opt "$opt" "$1"
       TIMEZONE="$1"
+      ;;
+    github_username)
+      check_opt "$opt" "$1"
+      GITHUB_USERNAME="$1"
       ;;
     swap-size)
       check_opt "$opt" "$1" '^[0-9]{4,}$' "swap-size (megabytes) must be an integer value of at least 1000"

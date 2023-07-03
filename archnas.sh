@@ -6,15 +6,6 @@ source "${IMPORT}/hue.sh" @import
 source "${IMPORT}/args.sh"
 source "${IMPORT}/common.sh"
 
-# Generates a new, password-less SSH key
-# $1 - Comment string (e.g. user/email)
-# $2 - A short identifier that will be placed in the key filename: ~/.ssh/id_$2_rsa
-gen_ssh_key() {
-  local keyfile="$HOME/.ssh/id_$2_rsa"
-  ssh-keygen -t rsa -b 4096 -C "$1" -f "$keyfile" -N ''
-  echo "$keyfile"
-}
-
 main() {
   boxbanner "Welcome to ArchNAS" "$BOLD_$BLUE"
   cat - << EOF
@@ -25,7 +16,7 @@ prompt:
 1. Enable sshd:
   # systemctl start sshd
 
-2. Set a password (anything) for the root user:
+2. Set up the temporary install user
   # chpasswd <<< root:archnas
 
 3. Find the machine's IP address:
@@ -40,11 +31,9 @@ EOF
   printf %s "$GREEN"
   ask TARGET_IP "(required) Enter the IP of the target machine:" "*"
   echo
-  ask SSH_KEY $'(optional) By default, ArchNAS will automatically create an SSH key for secure access (recommended).\n           You can also enter the path for your own:' "*" "${SSH_KEY:-skip}"
-  printf %s "$CLR"
 
-  [[ $SSH_KEY == skip ]] && SSH_KEY="$(gen_ssh_key "$USER" "$HOST_NAME")"
-  [[ ! -f $SSH_KEY ]] && fail "The SSH key file '$SSH_KEY' does not exist"
+  scp -r $PWD/src root@$TARGET_IP:~/archnas
+  ssh -t root@$TARGET_IP ~/archnas/install.sh
 }
 
 main

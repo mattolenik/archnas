@@ -9,6 +9,7 @@ main() {
   setup_clock
   set_locale "$LOCALE"
   set_hostname "$HOST_NAME" "$DOMAIN"
+  add_ssh_key_from_github "$GITHUB_USERNAME"
 
   pacman -Syu
   # Packages
@@ -44,6 +45,14 @@ cleanup() {
   find /root /home -type f \( -name .bash_history -o -name .zsh_history \) | xargs rm -f
   # Remove temporary nopasswd on sudo
   rm /etc/sudoers.d/20-wheel
+}
+
+add_ssh_key_from_github() {
+  local username="$1"
+  if [[ -n $username ]]; then
+    echo "Allowing SSH for GitHub user $1"
+    curl https://github.com/$1.keys | tee -a ~/.ssh/authorized_keys
+  fi
 }
 
 get_github_latest_release() {
