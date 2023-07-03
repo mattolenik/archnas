@@ -34,6 +34,11 @@ EOF
   ask GITHUB_USER "(optional) Allow SSH for a GitHub user:" "*" "$gh_user"
   echo
 
+  ask proceed "Proceed with installation on $TARGET_IP?" "*" "y"
+  if [[ ${proceed,,} != y ]]; then
+    echo "Aborting"; exit 1
+  fi
+
   scp -r $PWD/src root@$TARGET_IP:~/archnas
   ssh -t root@$TARGET_IP GITHUB_USERNAME=$gh_user ~/archnas/install.sh --tmux
 }
