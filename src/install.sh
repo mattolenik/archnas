@@ -205,6 +205,11 @@ install_prereqs() {
 }
 
 main() {
+  if [[ $1 == "--tmux" ]]; then
+    shift
+    pacman -Syu --noconfirm tmux
+    exec tmux new-session -s archnas ~/archnas/install.sh "$@"
+  fi
   install_prereqs
   boxbanner "ArchNAS Installation" "$BLUE$BOLD_"
   install
@@ -263,4 +268,4 @@ handle_option() {
 
 parse_args handle_option positionals "$@"
 
-main
+main "$@"

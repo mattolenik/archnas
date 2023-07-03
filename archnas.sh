@@ -33,7 +33,7 @@ EOF
   echo
 
   scp -r $PWD/src root@$TARGET_IP:~/archnas
-  ssh -t root@$TARGET_IP ~/archnas/install.sh
+  ssh -t root@$TARGET_IP ~/archnas/install.sh --tmux
 }
 
 main
