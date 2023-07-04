@@ -17,7 +17,7 @@
 
 set -euo pipefail
 [[ -n ${TRACE:-} ]] && set -x && export TRACE
-[[ $(uname -r) != *ARCH* ]] && echo "This script can only run on Arch Linux!" && exit 1
+[[ $(uname -r) != *arch* ]] && echo "This script can only run on Arch Linux!" && exit 1
 
 # Elevate to root if necessary, usually only needed during testing
 [[ $EUID != 0 ]] && exec sudo "$0" "$@"
@@ -37,8 +37,8 @@ source "${IMPORT}/geolocation.sh"
 ROOT_LABEL=${ROOT_LABEL:-system}
 CHROOT_SCRIPT="${IMPORT}/inside-chroot.sh"
 
-PACKAGE_FILE="packages.txt"
-PACKAGE_IGNORE_FILE="packages-ignore.txt"
+PACKAGE_FILE="${IMPORT}/packages.txt"
+PACKAGE_IGNORE_FILE="${IMPORT}/packages-ignore.txt"
 
 # UEFI system partition location
 export ESP=${ESP:-/boot}
@@ -105,9 +105,9 @@ install() {
   local packages packages_ignore
   # The following installs 'base' but without the 'linux' package.
   # This allows the desired kernel, e.g. 'linux-lts', it to be specified in the "$PACKAGE_FILE"
-  readarray -t packages < <(pacman -Sgq base | grep -Ev '^linux$' | cat - "$PACKAGE_FILE" | grep -Ev "$COMMENT_REGEX" | sort -u)
+  readarray -t packages < <(pacman -Sgq base | grep -Ev '^linux$' | cat - "$PACKAGE_FILE" |  sort -u)
   readarray -t packages_ignore < <(grep -Ev "$COMMENT_REGEX" "$PACKAGE_IGNORE_FILE" | sort -u)
-  packstrap /mnt "${packages[@]}" "${packages_ignore+--ignore ${packages_ignore[@]}}"
+  pacstrap /mnt ${packages[@]} ${packages_ignore[@]/#/--ignore }
 
   # Generate mounty stuff
   genfstab -U /mnt | tee /mnt/etc/fstab
@@ -193,23 +193,12 @@ set_user_password() {
 }
 
 install_prereqs() {
-  local prereqs=(jq reflector)
-  if ! command -v "${prereqs[0]}" $>/dev/null; then
-    blue $'Installing prereqs...\n'
-    pacman --noconfirm -Syq "${prereqs[@]}"
-  fi
-  country="$(get_geoip_info "$(get_external_ip)" country_code)"
-  blue "Finding fastest mirrors${country+ in $country}..."
-  echo
-  reflector --verbose --protocol https --sort rate --save /etc/pacman.d/mirrorlist ${country+--country $country}
+  local prereqs=(jq)
+  blue $'Installing prereqs...\n'
+  pacman --noconfirm -Syq ${prereqs[@]}
 }
 
 main() {
-  if [[ $1 == "--tmux" ]]; then
-    shift
-    pacman -Syu --noconfirm tmux
-    exec tmux new-session -s archnas ~/archnas/install.sh "$@"
-  fi
   install_prereqs
   boxbanner "ArchNAS Installation" "$BLUE$BOLD_"
   install
@@ -260,6 +249,9 @@ handle_option() {
     password)
       check_opt "$opt" "$1"
       PASSWORD="$1"
+      ;;
+    tmux)
+      export USE_TMUX=1
       ;;
     *)
       fail "Unknown option '$__$opt'"

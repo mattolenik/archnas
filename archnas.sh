@@ -29,7 +29,7 @@ At this point you are ready to proceed with the installation steps below.
 
 EOF
   printf %s "$GREEN"
-  ask TARGET_IP "(required) Enter the IP of the target machine:" "*"
+  ask TARGET_IP "(required) Enter the IP of the target machine:" "*" "${TARGET_IP:-}"
   gh_user="$(awk -F ': ' '/github.com:/ {getline; if ($1 ~ /^[[:space:]]+user/) print $2}' ~/.config/gh/hosts.yml 2>/dev/null || true)"
   ask GITHUB_USER "(optional) Allow SSH for a GitHub user:" "*" "$gh_user"
   echo
@@ -40,7 +40,7 @@ EOF
   fi
 
   scp -r $PWD/src root@$TARGET_IP:~/archnas
-  ssh -t root@$TARGET_IP GITHUB_USERNAME=$gh_user ~/archnas/install.sh --tmux
+  ssh -t root@$TARGET_IP "GITHUB_USERNAME=$gh_user archnas/install.sh | tee install.log"
 }
 
 main

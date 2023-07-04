@@ -4,6 +4,7 @@ set -euo pipefail
 trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
 HOME="/home/$USERNAME"
 FIRSTBOOT="$HOME/firstboot.sh"
+ARCH=x86_64
 
 main() {
   setup_clock
@@ -12,8 +13,7 @@ main() {
   add_ssh_key_from_github "$GITHUB_USERNAME"
 
   pacman -Syu
-  # Packages
-  upgrade_pip
+  install_prereqs
 
   # Root setup steps
   setup_services
@@ -31,6 +31,7 @@ main() {
   install_plexpass
   install_ups
   install_go
+  install_zfs
 
   install_bootloader
 
@@ -51,7 +52,8 @@ add_ssh_key_from_github() {
   local username="$1"
   if [[ -n $username ]]; then
     echo "Allowing SSH for GitHub user $1"
-    curl https://github.com/$1.keys | tee -a ~/.ssh/authorized_keys
+    mkdir -p $HOME/.ssh
+    curl https://github.com/$1.keys | tee -a $HOME/.ssh/authorized_keys
   fi
 }
 
@@ -65,18 +67,18 @@ install_bootloader() {
 
 }
 
+install_prereqs() {
+  pacman -Sy --noconfirm jq
+}
+
 install_ups() {
   yay_install network-ups-tools
+  mkdir -p /etc/ups
   cat <<EOF > /etc/ups/ups.conf
 [ups]
     driver = usbhid-ups
     port = auto
 EOF
-}
-
-upgrade_pip() {
-  pip install pip --upgrade
-  pip2 install pip --upgrade
 }
 
 install_zfs() {
@@ -116,7 +118,7 @@ firstboot_plex() {
 install_yay() {
   (
     cd "$(mktemp -d)"
-    curl -sSL "$(get_github_latest_release Jguer/yay)" | tar xz --strip-components=1
+    curl -sSL "$(get_github_latest_release Jguer/yay | grep $ARCH)" | tar xz --strip-components=1
     mv yay /usr/bin
     mv yay.8 /usr/share/man/
     mv bash /etc/bashrc.d/yay
@@ -126,7 +128,7 @@ install_yay() {
 
 install_go() {
   pacman --noconfirm -S go
-  cat << EOF >> /etc/profile.d/go.sh
+  cat << 'EOF' >> /etc/profile.d/go.sh
 export GOPATH="$HOME/go"
 export PATH="$GOPATH/bin:$PATH"
 EOF
@@ -218,13 +220,10 @@ SHELL
 
   # This will prefix the rc files with the contents of SHELL
   cat << SHELL | cat - "$zshrc" | tee "$zshrc"
-# Uncomment to automatically source all files in $zshrc_dir
-#for f in "$zshrc_dir/*"; do
-#  [[ -f \$f ]] && source "\$f"
-#done
-#
-# Or a source a specific file
-# source $zshrc_dir/myfile
+# Automatically source all files in $zshrc_dir
+for f in "$zshrc_dir/*"; do
+  [[ -f \$f ]] && source "\$f"
+done
 SHELL
 }
 
@@ -241,13 +240,10 @@ SHELL
 
   # This will prefix the rc files with the contents of SHELL.
   cat << SHELL | cat - "$bashrc" | tee "$bashrc"
-# Uncomment to automatically source all files in $bashrc_dir
-#for f in "$bashrc_dir/*"; do
-#  [[ -f \$f ]] && source "\$f"
-#done
-#
-# Or a source a specific file
-# source $bashrc_dir/myfile
+# Automatically source all files in $bashrc_dir
+for f in "$bashrc_dir/*"; do
+  [[ -f \$f ]] && source "\$f"
+done
 SHELL
 }
 

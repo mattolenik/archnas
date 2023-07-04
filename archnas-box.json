@@ -25,21 +25,11 @@
       "ssh_port": 22,
       "ssh_timeout": "5m",
       "ssh_username": "root",
-      "type": "virtualbox-iso",
-      "vboxmanage": [
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--memory",
-          "4096"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--cpus",
-          "3"
-        ]
-      ],
+      "net_device": "virtio-net",
+      "disk_interface": "virtio",
+      "format": "qcow2",
+      "accelerator": "kvm",
+      "type": "qemu",
       "vm_name": "archnas_packer"
     }
   ],
@@ -74,8 +64,8 @@
     }
   ],
   "variables": {
-    "arch_version": "2018.09.01",
-    "iso_checksum": "1649fa7e68a2c5dcc4e48b36ecbb8e318272e746",
+    "arch_version": "2023.07.01",
+    "iso_checksum": "1a2c1cdea0118b60525f55ee616e9cd4cf68fe17db906ce3d8e46fd06f9907eb",
     "root_password": "archnas"
   }
 }
