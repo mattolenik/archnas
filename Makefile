@@ -1,4 +1,10 @@
-default: testrun
+default: testrun dist
+
+.PHONY: dist
+dist:
+	@mkdir -p dist
+	tar -cvzf $@/archnas.tar.gz archnas
+
 
 dist/archnas.box: archnas-box.json
 	packer build -force archnas-box.json
