@@ -35,6 +35,10 @@ main() {
 
   install_bootloader
 
+  # Require manual upgrade of kernel so as to ensure it does not become out of sync with zfs-linux or zfs-linux-lts.
+  # The versions for linux and zfs-linux should always match.
+  echo "IgnorePkg=linux linux-lts linux-headers linux-lts-headers" >> /etc/pacman.conf
+
   cleanup
 }
 
@@ -82,7 +86,7 @@ EOF
 }
 
 install_zfs() {
-  yay_install zfs-dkms
+  yay_install zfs-linux-lts zfs-linux-lts-headers
 }
 
 yay_install() {

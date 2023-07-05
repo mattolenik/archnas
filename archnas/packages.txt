@@ -20,8 +20,8 @@ lf
 libva-intel-driver
 libvdpau-va-gl
 libutil-linux
-linux
-linux-headers
+linux-lts
+linux-lts-headers
 lm_sensors
 lsof
 neovim

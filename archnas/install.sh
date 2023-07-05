@@ -52,11 +52,20 @@ is_test() { [[ -n ${IS_TEST:-} ]]; }
 
 install() {
   ask LOCALE "Enter a locale" "*" "${LOCALE:-en_US}"
-  ask USERNAME "Enter a username" "*" "${USERNAME:-nasuser}"
   ask HOST_NAME "Enter a hostname" "*" "${HOST_NAME:-archnas}"
   ask DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
   ask TIMEZONE "Enter timezone" "*" "${TIMEZONE:-auto-detect}"
   ask GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
+  ask USERNAME "Enter a username" "*" "${USERNAME:-nasuser}"
+  while true; do
+    ask -s PASSWORD "Enter a password for ${USERNAME}" "*"
+    ask -s PASSWORD_CONFIRM "Confirm password for ${USERNAME}" "*"
+    if [[ $PASSWORD == $PASSWORD_CONFIRM ]]; then
+      break
+    fi
+    echo "Passwords do not match, please try again"
+    echo
+  done
   export LOCALE=${LOCALE:-"en_US"}
   export USERNAME
   export HOST_NAME
@@ -178,24 +187,13 @@ select_disk() {
 }
 
 set_user_password() {
-  if [[ -n ${PASSWORD:-} ]]; then
-    chpasswd --root /mnt <<< "$USERNAME:$PASSWORD"
-
-  elif [[ -n ${AUTO_APPROVE:-} ]] || [[ ! -t 1 ]]; then
-    [[ -z ${PASSWORD:-} ]] && fail "The --password option is required when using --auto-approve or when not in a tty"
-    chpasswd --root /mnt <<< "$USERNAME:$PASSWORD"
-
-  elif [[ -t 1 ]]; then
-    echo
-    echo "`red "One last thing!"` Set the password for `bold "$USERNAME"`"
-    passwd --root /mnt "$USERNAME"
-  fi
+  PASSWORD="${PASSWORD:-archnas}"
+  chpasswd --root /mnt <<< "$USERNAME:$PASSWORD"
 }
 
 install_prereqs() {
-  local prereqs=(jq)
   blue $'Installing prereqs...\n'
-  pacman --noconfirm -Syq ${prereqs[@]}
+  pacman --noconfirm -Syq jq
 }
 
 main() {

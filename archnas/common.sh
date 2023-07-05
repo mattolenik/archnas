@@ -1,4 +1,4 @@
-# shellcheck shell=bash
+#s shellcheck shell=bash
 ##
 # Prompt the user and wait for an answer. An optional default value
 # can be returned when the user skips the question by pressing ENTER.
@@ -16,6 +16,10 @@
 #IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 
 ask() {
+  if [[ $1 == "-s" ]]; then
+    local silent=1
+    shift
+  fi
   local _question="2"
   local _options="3"
   local _default="4"
@@ -41,7 +45,11 @@ ask() {
   fi
 
   while true; do
-    read -rp "${!_question} ${_options_string:-}" _answer
+    local flags=-rp
+    if [[ -n ${silent:-} ]]; then
+      flags=-srp
+    fi
+    read $flags "${!_question} ${_options_string:-}" _answer
     _answer="${_answer:-${!_default:-}}"
     if [[ ${!_options:-*} == "*" ]]; then
       # Populate the user-passed in variable
