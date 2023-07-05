@@ -77,6 +77,7 @@ install() {
   echo
   local system_device
   select_disk system_device
+  confirm_disk "$system_device"
 
   timedatectl set-ntp true
 
