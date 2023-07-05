@@ -106,3 +106,7 @@ boxbanner() {
   printf '╚%s╝\n' "$bar_str"
   [[ -n ${color_str:-} ]] && tput sgr0 || true
 }
+
+cleanup_list_file() {
+  sed -e 's/#.*//' -e '/^$/d' -e 's/[[:blank:]]\{1,\}/ /g' -e 's/^ //;s/ $//' "$1" | sort -u
+}

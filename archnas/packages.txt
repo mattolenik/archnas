@@ -5,7 +5,6 @@ btrfs-progs
 bind-tools
 ca-certificates
 cifs-utils
-dkms
 docker
 docker-compose
 dosfstools
@@ -14,6 +13,7 @@ fd
 git
 grub
 htop
+hyperfine
 intel-ucode
 jq
 lf
@@ -29,6 +29,7 @@ netdata
 nushell
 monit
 openssh
+parallel
 python
 ripgrep
 rsync

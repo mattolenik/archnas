@@ -59,6 +59,7 @@ install() {
   ask USERNAME "Enter a username" "*" "${USERNAME:-nasuser}"
   while true; do
     ask -s PASSWORD "Enter a password for ${USERNAME}" "*"
+    echo
     ask -s PASSWORD_CONFIRM "Confirm password for ${USERNAME}" "*"
     if [[ $PASSWORD == $PASSWORD_CONFIRM ]]; then
       break
@@ -114,8 +115,8 @@ install() {
   local packages packages_ignore
   # The following installs 'base' but without the 'linux' package.
   # This allows the desired kernel, e.g. 'linux-lts', it to be specified in the "$PACKAGE_FILE"
-  readarray -t packages < <(pacman -Sgq base | grep -Ev '^linux$' | cat - "$PACKAGE_FILE" |  sort -u)
-  readarray -t packages_ignore < <(grep -Ev "$COMMENT_REGEX" "$PACKAGE_IGNORE_FILE" | sort -u)
+  readarray -t packages < <(pacman -Sgq base | grep -Ev '^linux$' | cat - <(cleanup_list_file "$PACKAGE_FILE"))
+  readarray -t packages_ignore < <(cleanup_list_file "$PACKAGE_IGNORE_FILE")
   pacstrap /mnt ${packages[@]} ${packages_ignore[@]/#/--ignore }
 
   # Generate mounty stuff

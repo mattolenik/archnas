@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMPORT="$(dirname "${BASH_SOURCE[0]}")/src"
+IMPORT="$(dirname "${BASH_SOURCE[0]}")/archnas"
 source "${IMPORT}/hue.sh" @import
 source "${IMPORT}/args.sh"
 source "${IMPORT}/common.sh"
@@ -39,8 +39,8 @@ EOF
     echo "Aborting"; exit 1
   fi
 
-  scp -r $PWD/src root@$TARGET_IP:~/archnas
-  ssh -t root@$TARGET_IP "GITHUB_USERNAME=$gh_user archnas/install.sh | tee install.log"
+  scp -r $PWD/archnas root@$TARGET_IP:~/archnas
+  #ssh -t root@$TARGET_IP "GITHUB_USERNAME=$gh_user archnas/install.sh | tee install.log"
 }
 
 main

@@ -5,6 +5,7 @@ trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
 HOME="/home/$USERNAME"
 FIRSTBOOT="$HOME/firstboot.sh"
 ARCH=x86_64
+ALLOWED_NETWORK="192.168.0.0/16"
 
 main() {
   setup_clock
@@ -17,8 +18,7 @@ main() {
 
   # Root setup steps
   setup_services
-  write_firstboot_func firstboot_ufw
-  setup_smb
+
 
   # User setup and preferences
   setup_users
@@ -34,6 +34,8 @@ main() {
   install_zfs
 
   install_bootloader
+
+  write_firstboot_func firstboot_ufw
 
   # Require manual upgrade of kernel so as to ensure it does not become out of sync with zfs-linux or zfs-linux-lts.
   # The versions for linux and zfs-linux should always match.
@@ -103,7 +105,7 @@ install_plexpass() {
 ReadOnlyDirectories=/
 ReadWriteDirectories=/var/lib/plex /tmp
 EOF
-  write_firstboot_func "firstboot_plex"
+  write_firstboot_func firstboot_plex
   systemctl enable plexmediaserver
 }
 
@@ -158,7 +160,11 @@ set_locale() {
 # $2 - domain
 set_hostname() {
   echo "$1" > /etc/hostname
+  echo "$2" > /etc/domain
   echo "127.0.0.1 $1.$2 $1" >> /etc/hosts
+  echo 'HOSTNAME="$(cat /etc/hostname)"' >> /etc/profile
+  echo 'DOMAIN="$(cat /etc/domain)"' >> /etc/profile
+  echo 'FQDN="$HOSTNAME.$DOMAIN"' >> /etc/profile
 }
 
 # Appends a string to the firstboot script
@@ -186,17 +192,18 @@ firstboot_ufw() {
   ufw default deny incoming
   ufw allow ssh
   ufw limit ssh
-}
 
-setup_smb() {
-  write_firstboot_func firstboot_smb
-}
-
-firstboot_smb() {
   # CIFS
   ufw allow 137:138/udp
   ufw allow 139/tcp
   ufw allow 445/tcp
+
+  # NFS
+  ufw allow 2049/tcp
+
+  # HTTP/HTTPS
+  ufw allow 80/tcp
+  ufw allow 443/tcp
 }
 
 setup_users() {
