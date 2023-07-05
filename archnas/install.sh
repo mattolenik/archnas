@@ -6,13 +6,8 @@
 #
 # No arguments are needed, guided prompts will follow.
 ##
-# TODO: Copy over public key, defaulting to id_rsa, offer to make new one?
 # TODO: Set up SMB user and SMB shares
-# TODO: Setup ufw
 # TODO: Add help
-# TODO: Copy over custom SSL cert for web UIs
-# TODO: Break into multiple files/functions, groups/tags
-# TODO: Install AUR packages
 ##
 
 set -euo pipefail
@@ -33,6 +28,8 @@ source "${IMPORT}/hue.sh" @import
 source "${IMPORT}/args.sh"
 source "${IMPORT}/common.sh"
 source "${IMPORT}/geolocation.sh"
+
+DEFAULT_PASSWORD=archnas
 
 ROOT_LABEL=${ROOT_LABEL:-system}
 CHROOT_SCRIPT="${IMPORT}/inside-chroot.sh"
@@ -189,8 +186,7 @@ select_disk() {
 }
 
 set_user_password() {
-  PASSWORD="${PASSWORD:-archnas}"
-  chpasswd --root /mnt <<< "$USERNAME:$PASSWORD"
+  chpasswd --root /mnt <<< "$USERNAME:${PASSWORD:-$DEFAULT_PASSWORD}"
 }
 
 install_prereqs() {
