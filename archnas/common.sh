@@ -110,3 +110,21 @@ boxbanner() {
 cleanup_list_file() {
   sed -e 's/#.*//' -e '/^$/d' -e 's/[[:blank:]]\{1,\}/ /g' -e 's/^ //;s/ $//' "$1" | sort -u
 }
+
+ask_password_confirm() {
+  local var="$1"
+  shift
+  local pw1 pw2
+  while true; do
+    ask -s pw1 "$@"
+    printf '\n[Confirm] '
+    ask -s pw2 "$@"
+    if [[ $pw1 == $pw2 ]]; then
+      break
+    fi
+    echo "Passwords do not match, please try again"
+    echo
+  done
+  read -r "$var" <<< "$pw1"
+}
+

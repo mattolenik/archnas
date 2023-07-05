@@ -56,16 +56,7 @@ install() {
   ask TIMEZONE "Enter timezone" "*" "${TIMEZONE:-auto-detect}"
   ask GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
   ask USERNAME "Enter a username" "*" "${USERNAME:-nasuser}"
-  while true; do
-    ask -s PASSWORD "Enter a password for ${USERNAME}" "*"
-    echo
-    ask -s PASSWORD_CONFIRM "Confirm password for ${USERNAME}" "*"
-    if [[ $PASSWORD == $PASSWORD_CONFIRM ]]; then
-      break
-    fi
-    echo "Passwords do not match, please try again"
-    echo
-  done
+  ask_password_confirm PASSWORD "Enter a password for ${USERNAME}" "*"
   export LOCALE=${LOCALE:-"en_US"}
   export USERNAME
   export HOST_NAME
