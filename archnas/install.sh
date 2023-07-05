@@ -42,8 +42,10 @@ export ESP=${ESP:-/boot}
 
 unset USERNAME
 
-COMMENT_REGEX='^[[:blank:]]*$|#'
-strip_comments() { grep -Ev  "$1"; }
+if [[ -f ./setup.env ]]; then
+  echo "Using config from setup.env"
+  source ./setup.env
+fi
 
 is_test() { [[ -n ${IS_TEST:-} ]]; }
 
