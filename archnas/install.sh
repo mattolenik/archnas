@@ -246,9 +246,6 @@ handle_option() {
       check_opt "$opt" "$1"
       PASSWORD="$1"
       ;;
-    tmux)
-      export USE_TMUX=1
-      ;;
     *)
       fail "Unknown option '$__$opt'"
   esac
