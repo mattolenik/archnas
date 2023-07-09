@@ -1,0 +1,15 @@
+[Unit]
+Description=Portainer CE
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+ExecStartPre=-/usr/bin/docker rm -f portainer-systemd
+ExecStart=/usr/bin/docker run --rm --name portainer-systemd -d -p 9443:9443 -v /var/run/docker.sock:/var/run/docker.sock -v /opt/portainer/data:/data portainer/portainer
+ExecStop=/usr/bin/docker stop portainer-systemd
+ExecStopPost=/usr/bin/docker kill portainer-systemd
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,14 @@
+dozzle 8928/tcp
+frigate 5000/tcp
+monit 2812/tcp
+plex 32400/tcp        # Plex general
+plex 32400/udp        # Plex general
+plex 32410/udp        # Plex GDM network discovery
+plex 32412:32414/udp  # Plex GDM network discovery
+plex 32469/tcp        # Plex DLNA
+plex 1900/udp         # Plex DLNA
+portainer 9443/tcp
+rtsps 8554/tcp
+rtsps 8554/udp
+webrtc 8555/tcp
+webrtc 8555/udp

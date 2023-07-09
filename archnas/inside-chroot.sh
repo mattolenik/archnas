@@ -11,14 +11,14 @@ main() {
   setup_clock
   set_locale "$LOCALE"
   set_hostname "$HOST_NAME" "$DOMAIN"
-  add_ssh_key_from_github "$GITHUB_USERNAME"
 
   pacman -Syu
   install_prereqs
-
-  # Root setup steps
-  setup_services
-
+  install_yay
+  install_plexpass
+  install_ups
+  install_go
+  install_zfs
 
   # User setup and preferences
   setup_users
@@ -26,16 +26,14 @@ main() {
   setup_bash
   chown -R "$USERNAME:$USERNAME" "$HOME"
 
-  # User install steps
-  install_yay
-  install_plexpass
-  install_ups
-  install_go
-  install_zfs
+  chown root:root /etc/secrets.json  # TODO check if this is needed
+  chmod 600 /etc/secrets.json
 
-  install_bootloader
+  setup_services
 
   write_firstboot_func firstboot_ufw
+
+  install_bootloader
 
   # Require manual upgrade of kernel so as to ensure it does not become out of sync with zfs-linux or zfs-linux-lts.
   # The versions for linux and zfs-linux should always match.
@@ -50,8 +48,6 @@ cleanup() {
   # Remove bash and zsh history from all users
   # shellcheck disable=SC2038
   find /root /home -type f \( -name .bash_history -o -name .zsh_history \) | xargs rm -f
-  # Remove temporary nopasswd on sudo
-  rm /etc/sudoers.d/20-wheel
 }
 
 add_ssh_key_from_github() {
@@ -110,15 +106,7 @@ EOF
 }
 
 firstboot_plex() {
-  # Firewall rules
-  # Plex general port
-  ufw allow 32400
-  # Plex GDM network discovery
-  ufw allow 32410/udp
-  ufw allow 32412:32414/udp
-  # Plex DLNA
-  ufw allow 32469/tcp
-  ufw allow 1900/udp
+
 }
 
 install_yay() {
@@ -190,32 +178,48 @@ firstboot_ufw() {
   ufw enable
   ufw default allow outgoing
   ufw default deny incoming
-  ufw allow ssh
-  ufw limit ssh
 
-  # CIFS
-  ufw allow 137:138/udp
-  ufw allow 139/tcp
-  ufw allow 445/tcp
-
-  # NFS
-  ufw allow 2049/tcp
-
-  # HTTP/HTTPS
-  ufw allow 80/tcp
-  ufw allow 443/tcp
+  local allow=(
+    dozzle        # Docker container log viewer
+    frigate       # Frigate NVR web UI
+    http          # HTTP on 80
+    https         # HTTPS on 443
+    microsoft-ds  # Samba
+    monit         # Monit web UI
+    netbios-dgm   # Samba
+    netbios-ns    # Samba
+    netbios-ssn   # Samba
+    nfs           # File sharing
+    nut           # Network UPS Tools
+    portainer     # Portainer web UI
+    rsync         # Backup
+    rtsp          # Used by Frigate
+    rtsps         # Used by Frigate
+    smtp          # Mail relay
+    ssh           # SSH
+    syslog        # Accept logs from other hosts
+    webrtc        # Used by Frigate
+  )
+  local limit=(
+    ssh
+  )
+  for svc in "${allow[@]}"; do
+    ufw allow "$svc"
+  done
+  for svc in "${limit[@]}"; do
+    ufw limit "$svc"
+  done
 }
 
 setup_users() {
-  echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/10-wheel
-  # Temporarily override the first entry and lift password requirement during setup
-  echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/20-wheel
+  echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/10-wheel
   echo "Defaults lecture = never" > /etc/sudoers.d/disable-lecture
   echo "PermitRootLogin no" >> /etc/ssh/sshd_config
   useradd -d "$HOME" -G docker,wheel -s "$(command -v zsh)" "$USERNAME"
   mkdir -p "$HOME/.ssh"
-  touch "$HOME/.ssh/authorized_keys"
   passwd -l root
+  chpasswd <<< "$USERNAME:$PASSWORD"
+  add_ssh_key_from_github "$GITHUB_USERNAME"
 }
 
 setup_zsh() {

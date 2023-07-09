@@ -1,0 +1,16 @@
+[Unit]
+Description=Frigate NVR
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+Environment=FRIGATE_MEDIA=/media/frigate
+Environment=FRIGATE_CONFIG=/etc/frigate.yml
+ExecStartPre=-/usr/bin/docker rm -f frigate-systemd
+ExecStop=/usr/bin/docker stop frigate-systemd
+ExecStopPost=/usr/bin/docker kill frigate-systemd
+ExecStart=/usr/libexec/systemd/frigate-start
+
+[Install]
+WantedBy=multi-user.target

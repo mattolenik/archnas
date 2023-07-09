@@ -12,7 +12,7 @@
 
 set -euo pipefail
 [[ -n ${TRACE:-} ]] && set -x && export TRACE
-[[ $(uname -r) != *arch* ]] && echo "This script can only run on Arch Linux!" && exit 1
+#[[ $(uname -r) != *arch* ]] && echo "This script can only run on Arch Linux!" && exit 1
 
 # Elevate to root if necessary, usually only needed during testing
 [[ $EUID != 0 ]] && exec sudo "$0" "$@"
@@ -57,8 +57,9 @@ install() {
   ask GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
   ask USERNAME "Enter a username" "*" "${USERNAME:-nasuser}"
   ask_password_confirm PASSWORD "Enter a password for ${USERNAME}" "*"
-  export LOCALE=${LOCALE:-"en_US"}
+  export LOCALE
   export USERNAME
+  export PASSWORD
   export HOST_NAME
   export DOMAIN
   export TIMEZONE
@@ -75,7 +76,7 @@ install() {
   echo
   echo "Output is logged to a file named `green "$LOG_FILE"`"
 
-  SWAP_PART_SIZE=${SWAP_PART_SIZE:-8192}
+  SWAP_PART_SIZE=${SWAP_PART_SIZE:-16384}
   BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
 
   wipefs -af "$system_device"
@@ -86,7 +87,11 @@ install() {
   parted "$system_device" mkpart primary $((1+BOOT_PART_SIZE+SWAP_PART_SIZE))MiB 100%
 
   local parts
-  readarray -t parts < <(sfdisk -J "$system_device" | jq -r '.partitiontable.partitions[].node')
+  sfdisk_json="$(sfdisk -J "$system_device")"
+  echo "==============="
+  echo "sfdisk_json: $sfdisk_json"
+  echo "==============="
+  readarray -t parts < <(jq -r '.partitiontable.partitions[].node' <<< "$sfdisk_json")
   local boot_part="${parts[0]}"
   local swap_part="${parts[1]}"
   local root_part="${parts[2]}"
@@ -108,7 +113,18 @@ install() {
   # This allows the desired kernel, e.g. 'linux-lts', it to be specified in the "$PACKAGE_FILE"
   readarray -t packages < <(pacman -Sgq base | grep -Ev '^linux$' | cat - <(cleanup_list_file "$PACKAGE_FILE"))
   readarray -t packages_ignore < <(cleanup_list_file "$PACKAGE_IGNORE_FILE")
+
+  # Bootstrap
   pacstrap /mnt ${packages[@]} ${packages_ignore[@]/#/--ignore }
+
+  rsync -v $IMPORT/fs/ /mnt/
+
+  # The contents of the fs/append tree are not copied into the new install but added/appended to any existing files.
+  # This provides a convenient way to modify configuration by just writing it in files and having it merged for you.
+  for f in $(find fs/append -type f); do
+    echo | cat - ${f} >> /mnt${f#fs/append}
+  done
+
 
   # Generate mounty stuff
   genfstab -U /mnt | tee /mnt/etc/fstab
@@ -121,24 +137,25 @@ install() {
   local elapsed=$(( $(date +%s) - start_time ))
   echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60)) seconds"
 
-  set_user_password
-
   if ! is_test; then
     umount -R /mnt
   fi
 
-  [[ -n ${AUTO_APPROVE:-} ]] && return
-  read -rp $'\nInstallation complete! Press enter to reboot.\n'
+  if [[ -z ${AUTO_APPROVE:-} ]]; then
+    read -rp $'\nInstallation complete! Press enter to reboot.\n'
+  fi
   reboot
 }
 
 confirm_disk() {
-  [[ -n ${AUTO_APPROVE:-} ]] && return 0
+  if [[ -n ${AUTO_APPROVE:-} ]]; then return 0; fi
   local continue
   echo "`red NOTICE:` ArchNAS is about to be installed onto disk: `red "$1"`"
   echo "Continue? This will `red DESTROY` any existing data."
   read -rp "Type YES to proceed, or anything else to abort: " continue
-  [[ $continue != "YES" ]] && fail "Aborting installation"
+  if [[ $continue != "YES" ]]; then
+    fail "Aborting installation"
+  fi
 }
 
 # Find available, writeable disks for install. It will print
@@ -178,13 +195,9 @@ select_disk() {
   done
 }
 
-set_user_password() {
-  chpasswd --root /mnt <<< "$USERNAME:${PASSWORD:-$DEFAULT_PASSWORD}"
-}
-
 install_prereqs() {
   blue $'Installing prereqs...\n'
-  pacman --noconfirm -Syq jq
+  pacman --noconfirm -Syq jq rsync
 }
 
 main() {
