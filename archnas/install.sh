@@ -121,11 +121,11 @@ install() {
 
   # The contents of the fs/append tree are not copied into the new install but added/appended to any existing files.
   # This provides a convenient way to modify configuration by just writing it in files and having it merged for you.
-  echo "========="
   for f in $(find $IMPORT/fs/append -type f); do
-    echo "---------"
-    echo $f
-    echo | cat - ${f} >> /mnt${f#fs/append}
+    local destFile="/mnt/${f#$IMPORT/fs/append/}"
+    mkdir -p "$(dirname "$destFile")"
+    echo Appending "$f" to "$destFile"
+    echo | cat - ${f} >> "$destFile"
   done
 
 
