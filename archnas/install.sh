@@ -38,7 +38,7 @@ PACKAGE_FILE="${IMPORT}/packages.txt"
 PACKAGE_IGNORE_FILE="${IMPORT}/packages-ignore.txt"
 
 # UEFI system partition location
-export ESP=${ESP:-/boot}
+export ESP=${ESP:-/boot/efi}
 
 unset USERNAME
 
@@ -64,6 +64,8 @@ install() {
   export DOMAIN
   export TIMEZONE
   export GITHUB_USERNAME
+
+
 
   echo
   local system_device
@@ -115,7 +117,7 @@ install() {
   readarray -t packages_ignore < <(cleanup_list_file "$PACKAGE_IGNORE_FILE")
 
   # Bootstrap
-  pacstrap /mnt ${packages[@]} ${packages_ignore[@]/#/--ignore }
+  pacstrap /mnt ${packages_ignore[@]/#/--ignore } ${packages[@]}
 
   rsync -v $IMPORT/fs/copy/ /mnt/
 
@@ -133,7 +135,9 @@ install() {
   genfstab -U /mnt | tee /mnt/etc/fstab
 
   # Perform the part of the install that runs inside the chroot.
-  cat "$IMPORT/geolocation.sh" "$CHROOT_SCRIPT" | arch-chroot /mnt /bin/bash
+  /mnt/tmp/install-vars.sh <<< "export ESP=$ESP; export LOCALE=$LOCALE; export USERNAME=$USERNAME; export PASSWORD=$PASSWORD; export HOST_NAME=$HOST_NAME; export DOMAIN=$DOMAIN; export TIMEZONE=$TIMEZONE; export GITHUB_USERNAME=$GITHUB_USERNAME"
+
+  cat  "$IMPORT/geolocation.sh" "$CHROOT_SCRIPT" | arch-chroot /mnt /bin/bash
 
   boxbanner "...done!" "$GREEN$BOLD_"
 

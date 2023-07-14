@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 [[ -n ${TRACE:-} ]] && set -x && export TRACE
 set -euo pipefail
+source /tmp/install-vars.sh
 trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
 HOME="/home/$USERNAME"
 FIRSTBOOT="$HOME/firstboot.sh"
@@ -19,7 +20,6 @@ main() {
   chown -R "$USERNAME:$USERNAME" "$HOME"
 
   pacman -Syu
-  install_prereqs
   install_yay
   install_plexpass
   install_ups
@@ -63,11 +63,6 @@ get_github_latest_release() {
 install_bootloader() {
   grub-install --target=x86_64-efi --efi-directory="$ESP" --bootloader-id=GRUB
   grub-mkconfig -o /boot/grub/grub.cfg
-
-}
-
-install_prereqs() {
-  pacman -Sy --noconfirm jq
 }
 
 install_ups() {
@@ -98,7 +93,6 @@ install_plexpass() {
 ReadOnlyDirectories=/
 ReadWriteDirectories=/var/lib/plex /tmp
 EOF
-  systemctl enable plexmediaserver
 }
 
 install_yay() {
@@ -208,6 +202,7 @@ setup_users() {
   echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/10-wheel
   echo "Defaults lecture = never" > /etc/sudoers.d/disable-lecture
   echo "PermitRootLogin no" >> /etc/ssh/sshd_config
+  echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
   useradd -d "$HOME" -G docker,wheel -s "$(command -v zsh)" "$USERNAME"
   mkdir -p "$HOME/.ssh"
   passwd -l root
@@ -261,6 +256,7 @@ setup_services() {
     dozzle
     frigate
     nmb
+    plexmediaserver
     portainer
     smb
     sshd
@@ -270,3 +266,4 @@ setup_services() {
 }
 
 main "$@"
+
