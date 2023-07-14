@@ -108,10 +108,11 @@ install_yay() {
   (
     cd "$(mktemp -d)"
     curl -sSL "$(get_github_latest_release Jguer/yay | grep $ARCH)" | tar xz --strip-components=1
-    mv yay /usr/bin
-    mv yay.8 /usr/share/man/
-    mv bash /etc/bashrc.d/yay
-    mv zsh /etc/zshrc.d/yay
+    mv -f yay /usr/bin/
+    mv -f yay.8 /usr/share/man/
+    mkdir -p /etc/bashrc.d /etc/zshrc.d
+    mv -f bash /etc/bashrc.d/yay
+    mv -f zsh /etc/zshrc.d/yay
   )
 }
 
