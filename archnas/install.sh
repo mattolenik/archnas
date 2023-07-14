@@ -121,7 +121,7 @@ install() {
 
   # The contents of the fs/append tree are not copied into the new install but added/appended to any existing files.
   # This provides a convenient way to modify configuration by just writing it in files and having it merged for you.
-  for f in $(find fs/append -type f); do
+  for f in $(find $IMPORT/fs/append -type f); do
     echo | cat - ${f} >> /mnt${f#fs/append}
   done
 
