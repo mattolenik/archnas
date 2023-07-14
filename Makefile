@@ -5,10 +5,6 @@ dist:
 	@mkdir -p dist
 	tar -cvzf $@/archnas.tar.gz archnas
 
-.PHONY: publish
-publish:
-	cp -f dist/archnas.tar.gz publish/
-
 dist/archnas.box: archnas-box.json
 	packer build -force archnas-box.json
 
