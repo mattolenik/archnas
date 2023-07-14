@@ -36,6 +36,7 @@ openssh
 parallel
 pass
 python
+rdma-core
 ripgrep
 rsync
 samba
@@ -46,6 +47,7 @@ starship
 tmux
 ufw
 wget
+xf86-video-intel
 yq
 zsh
 zsh-completions
