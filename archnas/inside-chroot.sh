@@ -258,7 +258,10 @@ SHELL
 setup_services() {
   services=(
     docker
+    dozzle
+    frigate
     nmb
+    portainer
     smb
     sshd
     ufw
