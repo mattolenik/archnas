@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 [[ -n ${TRACE:-} ]] && set -x && export TRACE
 set -euo pipefail
-source /tmp/install-vars.sh
 trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
 HOME="/home/$USERNAME"
 FIRSTBOOT="$HOME/firstboot.sh"
