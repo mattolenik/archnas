@@ -130,13 +130,12 @@ install() {
     echo | cat - ${f} >> "$destFile"
   done
 
+  mkdir -p /mnt/tmp/
+  # Perform the part of the install that runs inside the chroot.
+   echo "export ESP=$ESP; export LOCALE=$LOCALE; export USERNAME=$USERNAME; export PASSWORD=$PASSWORD; export HOST_NAME=$HOST_NAME; export DOMAIN=$DOMAIN; export TIMEZONE=$TIMEZONE; export GITHUB_USERNAME=$GITHUB_USERNAME" > /mnt/tmp/install-vars.sh
 
   # Generate mounty stuff
   genfstab -U /mnt | tee /mnt/etc/fstab
-
-  # Perform the part of the install that runs inside the chroot.
-  /mnt/tmp/install-vars.sh <<< "export ESP=$ESP; export LOCALE=$LOCALE; export USERNAME=$USERNAME; export PASSWORD=$PASSWORD; export HOST_NAME=$HOST_NAME; export DOMAIN=$DOMAIN; export TIMEZONE=$TIMEZONE; export GITHUB_USERNAME=$GITHUB_USERNAME"
-
   cat  "$IMPORT/geolocation.sh" "$CHROOT_SCRIPT" | arch-chroot /mnt /bin/bash
 
   boxbanner "...done!" "$GREEN$BOLD_"

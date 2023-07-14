@@ -12,6 +12,7 @@ dosfstools
 dust
 efibootmgr
 fd
+figlet
 git
 git-delta
 grub
