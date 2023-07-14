@@ -101,12 +101,7 @@ install_plexpass() {
 ReadOnlyDirectories=/
 ReadWriteDirectories=/var/lib/plex /tmp
 EOF
-  write_firstboot_func firstboot_plex
   systemctl enable plexmediaserver
-}
-
-firstboot_plex() {
-
 }
 
 install_yay() {
