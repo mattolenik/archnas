@@ -18,9 +18,6 @@ main() {
   setup_bash
   chown -R "$USERNAME:$USERNAME" "$HOME"
 
-  chown root:root /etc/secrets.json  # TODO check if this is needed
-  chmod 600 /etc/secrets.json
-
   pacman -Syu
   install_prereqs
   install_yay
@@ -29,7 +26,7 @@ main() {
   install_go
   install_zfs
 
-    setup_services
+  setup_services
 
   write_firstboot_func firstboot_ufw
 
