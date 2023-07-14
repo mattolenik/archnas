@@ -12,14 +12,6 @@ main() {
   set_locale "$LOCALE"
   set_hostname "$HOST_NAME" "$DOMAIN"
 
-  pacman -Syu
-  install_prereqs
-  install_yay
-  install_plexpass
-  install_ups
-  install_go
-  install_zfs
-
   # User setup and preferences
   setup_users
   setup_zsh
@@ -29,7 +21,15 @@ main() {
   chown root:root /etc/secrets.json  # TODO check if this is needed
   chmod 600 /etc/secrets.json
 
-  setup_services
+  pacman -Syu
+  install_prereqs
+  install_yay
+  install_plexpass
+  install_ups
+  install_go
+  install_zfs
+
+    setup_services
 
   write_firstboot_func firstboot_ufw
 
