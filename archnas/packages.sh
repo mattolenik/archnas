@@ -1,0 +1,74 @@
+system_packages=(
+  base-devel
+  bash
+  bash-completion
+  bat
+  bind-tools
+  btrfs-progs
+  ca-certificates
+  cifs-utils
+  docker
+  docker-compose
+  dosfstools
+  dust
+  efibootmgr
+  fd
+  figlet
+  git
+  git-delta
+  go
+  grub
+  htop
+  hyperfine
+  intel-ucode
+  just
+  jq
+  lf
+  libutil-linux
+  libva-intel-driver
+  libvdpau-va-gl
+  linux-firmware
+  linux-lts
+  linux-lts-headers
+  lm_sensors
+  lsof
+  monit
+  neovim
+  netdata
+  nushell
+  nut
+  openssh
+  parallel
+  pass
+  python
+  rdma-core
+  ripgrep
+  rsync
+  samba
+  smartmontools
+  snapper
+  sudo
+  starship
+  tmux
+  ufw
+  wget
+  xf86-video-intel
+  yq
+  zsh
+  zsh-completions
+)
+
+ignore_packages=(
+  linux
+  linux-lts
+  linux-headers
+  linux-lts-headers
+)
+
+aur_packages=(
+  plex-media-server
+  rcm
+  zfs-linux-lts
+  zfs-linux-lts-headers
+)
+

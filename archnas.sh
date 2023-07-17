@@ -13,13 +13,10 @@ Before installation begins, a few initial steps are required. After you have
 booted the Arch installation media, do the following from the initial command
 prompt:
 
-1. Enable sshd:
-  # systemctl start sshd
-
-2. Set up the temporary install user
+1. Set up the temporary install user
   # chpasswd <<< root:archnas
 
-3. Find the machine's IP address:
+2. Find the machine's IP address:
   # ip address show
 
 Look for your Eth/WiFi device, it likely has a 192.x.x.x or 10.x.x.x IP address,
@@ -40,7 +37,8 @@ EOF
   fi
 
   scp -r $PWD/archnas root@$TARGET_IP:~/archnas
-  #ssh -t root@$TARGET_IP "GITHUB_USERNAME=$gh_user archnas/install.sh | tee install.log"
+  ssh -t root@$TARGET_IP "GITHUB_USERNAME=$gh_user archnas/install.sh" | tee install.log
+  scp root@TARGET_IP:~/install.log .
 }
 
 main

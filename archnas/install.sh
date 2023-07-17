@@ -21,31 +21,19 @@ script_name="${0##*/}"
 LOG_FILE="${LOG_FILE:-${script_name%.*}.log}"
 exec > >(tee -i "$LOG_FILE"); exec 2>&1
 trap 'echo ERROR on line $LINENO in $script_name' ERR
-start_time="$(date +%s)"
 
 IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 source "${IMPORT}/hue.sh" @import
 source "${IMPORT}/args.sh"
 source "${IMPORT}/common.sh"
 source "${IMPORT}/geolocation.sh"
+source "${IMPORT}/packages.sh"
 
-DEFAULT_PASSWORD=archnas
-
-ROOT_LABEL=${ROOT_LABEL:-system}
-CHROOT_SCRIPT="${IMPORT}/inside-chroot.sh"
-
-PACKAGE_FILE="${IMPORT}/packages.txt"
-PACKAGE_IGNORE_FILE="${IMPORT}/packages-ignore.txt"
+SWAP_PART_SIZE=${SWAP_PART_SIZE:-16384}
+BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
 
 # UEFI system partition location
-export ESP=${ESP:-/boot/efi}
-
-unset USERNAME
-
-if [[ -f ./setup.env ]]; then
-  echo "Using config from setup.env"
-  source ./setup.env
-fi
+ESP=${ESP:-/boot/efi}
 
 is_test() { [[ -n ${IS_TEST:-} ]]; }
 
@@ -57,15 +45,6 @@ install() {
   ask GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
   ask USERNAME "Enter a username" "*" "${USERNAME:-nasuser}"
   ask_password_confirm PASSWORD "Enter a password for ${USERNAME}" "*"
-  export LOCALE
-  export USERNAME
-  export PASSWORD
-  export HOST_NAME
-  export DOMAIN
-  export TIMEZONE
-  export GITHUB_USERNAME
-
-
 
   echo
   local system_device
@@ -74,12 +53,10 @@ install() {
 
   timedatectl set-ntp true
 
+  start_time="$(date +%s)"
   boxbanner "Installing..." "$GREEN$BOLD_"
   echo
   echo "Output is logged to a file named `green "$LOG_FILE"`"
-
-  SWAP_PART_SIZE=${SWAP_PART_SIZE:-16384}
-  BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
 
   wipefs -af "$system_device"
   parted "$system_device" mklabel gpt
@@ -89,11 +66,7 @@ install() {
   parted "$system_device" mkpart primary $((1+BOOT_PART_SIZE+SWAP_PART_SIZE))MiB 100%
 
   local parts
-  sfdisk_json="$(sfdisk -J "$system_device")"
-  echo "==============="
-  echo "sfdisk_json: $sfdisk_json"
-  echo "==============="
-  readarray -t parts < <(jq -r '.partitiontable.partitions[].node' <<< "$sfdisk_json")
+  readarray -t parts < <(sfdisk -J "$system_device" | jq -r '.partitiontable.partitions[].node')
   local boot_part="${parts[0]}"
   local swap_part="${parts[1]}"
   local root_part="${parts[2]}"
@@ -102,22 +75,19 @@ install() {
   mkswap "$swap_part"
   swapon "$swap_part"
   mkfs.fat -F32 "$boot_part"
-  mkfs.btrfs -f -L "$ROOT_LABEL" "$root_part"
+  mkfs.btrfs -f -L "system" "$root_part"
 
   # Always mount root partition before next steps
-  mount "$root_part" /mnt
+  mount --mkdir "$root_part" /mnt
+  mount --mkdir "$boot_part" "/mnt${ESP}"
 
-  mkdir -p "/mnt${ESP}"
-  mount "$boot_part" "/mnt${ESP}"
-
-  local packages packages_ignore
   # The following installs 'base' but without the 'linux' package.
-  # This allows the desired kernel, e.g. 'linux-lts', it to be specified in the "$PACKAGE_FILE"
-  readarray -t packages < <(pacman -Sgq base | grep -Ev '^linux$' | cat - <(cleanup_list_file "$PACKAGE_FILE"))
-  readarray -t packages_ignore < <(cleanup_list_file "$PACKAGE_IGNORE_FILE")
+  # This allows the desired kernel, e.g. 'linux-lts', it to be specified packages.sh
+  local base_packages
+  readarray -t base_packages < <(pacman -Sgq base | grep -Ev '^linux$')
 
   # Bootstrap
-  pacstrap /mnt ${packages_ignore[@]/#/--ignore } ${packages[@]}
+  pacstrap /mnt ${ignore_packages[@]/#/--ignore } ${base_packages[@]} ${system_packages[@]}
 
   rsync -v $IMPORT/fs/copy/ /mnt/
 
@@ -130,14 +100,22 @@ install() {
     echo | cat - ${f} >> "$destFile"
   done
 
-  mkdir -p /mnt/tmp/
-  # Perform the part of the install that runs inside the chroot.
+  # Require manual upgrade of kernel so as to ensure it does not become out of sync with zfs-linux or zfs-linux-lts.
+  # The versions for linux and zfs-linux should always match.
+  echo "IgnorePkg=${ignore_packages[@]}" >> /mnt/etc/pacman.conf
 
-  # Generate mounty stuff
+  # Set hostname and domain
+  echo "$HOST_NAME" > /mnt/etc/hostname
+  echo "$DOMAIN" > /mnt/etc/domain
+  echo "127.0.0.1 $HOST_NAME.$DOMAIN $HOST_NAME" >> /mnt/etc/hosts
+
   genfstab -U /mnt | tee /mnt/etc/fstab
-   echo -e "export ESP=$ESP; export LOCALE=$LOCALE; export USERNAME=$USERNAME; export PASSWORD=$PASSWORD; export HOST_NAME=$HOST_NAME; export DOMAIN=$DOMAIN; export TIMEZONE=$TIMEZONE; export GITHUB_USERNAME=$GITHUB_USERNAME\n" | cat - "$IMPORT/geolocation.sh" "$CHROOT_SCRIPT" | arch-chroot /mnt /bin/bash
 
-  boxbanner "...done!" "$GREEN$BOLD_"
+  export_vars ESP LOCALE USERNAME PASSWORD TIMEZONE GITHUB_USERNAME |
+    cat - "$IMPORT/packages.sh" "$IMPORT/geolocation.sh" "$IMPORT/inside-chroot.sh" |
+    arch-chroot /mnt /bin/bash
+
+  boxbanner "Done!" "$GREEN$BOLD_"
 
   local elapsed=$(( $(date +%s) - start_time ))
   echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60)) seconds"
@@ -146,10 +124,7 @@ install() {
     umount -R /mnt
   fi
 
-  if [[ -z ${AUTO_APPROVE:-} ]]; then
-    read -rp $'\nInstallation complete! Press enter to reboot.\n'
-  fi
-  reboot
+  echo $'\nInstallation complete! Remove installation media and reboot.'
 }
 
 confirm_disk() {
