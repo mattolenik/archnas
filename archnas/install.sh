@@ -87,7 +87,7 @@ install() {
   readarray -t base_packages < <(pacman -Sgq base | grep -Ev '^linux$')
 
   # Bootstrap
-  pacstrap /mnt ${ignore_packages[@]/#/--ignore } ${base_packages[@]} ${system_packages[@]}
+  pacstrap -K /mnt ${ignore_packages[@]/#/--ignore } ${base_packages[@]} ${system_packages[@]}
 
   rsync -v $IMPORT/fs/copy/ /mnt/
 
