@@ -36,6 +36,8 @@ cleanup() {
   # Remove bash and zsh history from all users
   # shellcheck disable=SC2038
   find /root /home -type f \( -name .bash_history -o -name .zsh_history \) | xargs rm -f
+  # Remove leftovers from AUR builds
+  rm -rf "$HOME/go"
 }
 
 install_packages() {
