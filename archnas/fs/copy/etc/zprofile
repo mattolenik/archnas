@@ -1,2 +1,2 @@
 export PS1='%n@%m %~'$'\n''%(?..%? )%(!.#.$) '
-
+alias ls='lsd --header --color=always --group-directories-first'

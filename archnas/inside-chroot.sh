@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
+TRACE=1
 [[ -n ${TRACE:-} ]] && set -x && export TRACE
 set -euo pipefail
 trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
-HOME="/home/$USERNAME"
+HOME="/home/$USER_NAME"
 ARCH="${ARCH:-x86_64}"
+FIRSTBOOT_SCRIPT="/root/firstboot.sh"
 
 SERVICES=(
   docker
@@ -15,15 +17,16 @@ SERVICES=(
   smb
   sshd
   ufw
+  zfs.target
+  zfs-mount.service
 )
 
 main() {
   setup_clock
   set_locale "$LOCALE"
-  install_packages
   setup_users
+  install_packages
   setup_services
-  setup_ufw
   install_bootloader
   cleanup
 }
@@ -37,9 +40,9 @@ cleanup() {
 }
 
 install_packages() {
-  pacman -Syu
   install_yay
-  yay_install "${aur_packages[@]}"
+  pacman -Sy --refresh
+  runuser -u "$USER_NAME" -- yay --noconfirm -Sy ${aur_packages[@]}
 }
 
 add_ssh_key_from_github() {
@@ -47,22 +50,18 @@ add_ssh_key_from_github() {
   if [[ -n $username ]]; then
     echo "Allowing SSH for GitHub user $1"
     mkdir -p $HOME/.ssh
-    curl "https://github.com/$username.keys" | tee -a $HOME/.ssh/authorized_keys
+    curl -sS "https://github.com/$username.keys" | tee -a $HOME/.ssh/authorized_keys
     chmod -R 600 $HOME/.ssh
   fi
 }
 
 get_github_latest_release() {
-  curl -s "https://api.github.com/repos/$1/releases/latest" | jq -r '.assets[].browser_download_url'
+  curl -sS "https://api.github.com/repos/$1/releases/latest" | jq -r '.assets[].browser_download_url'
 }
 
 install_bootloader() {
-  grub-install --target=x86_64-efi --efi-directory="$ESP" --bootloader-id=GRUB
+  grub-install --target=$ARCH-efi --efi-directory="$ESP" --bootloader-id=GRUB
   grub-mkconfig -o /boot/grub/grub.cfg
-}
-
-yay_install() {
-  sudo -u "$USERNAME" yay --noconfirm -Sy "$@"
 }
 
 install_yay() {
@@ -80,7 +79,9 @@ install_yay() {
 setup_clock() {
   # shellcheck disable=SC2155
   local tz="$(get_geoip_info "$(get_external_ip)" time_zone || true)"
-  [[ $TIMEZONE == auto-detect ]] && export TIMEZONE="${tz:-UTC}"
+  if [[ $TIMEZONE == auto-detect ]]; then
+    export TIMEZONE="${tz:-UTC}"
+  fi
   echo "Setting timezone to $TIMEZONE"
   ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
   hwclock --systohc
@@ -92,6 +93,7 @@ set_locale() {
   locale-gen
 }
 
+ # must be done in firstboot
 setup_ufw() {
   ufw enable
   ufw default allow outgoing
@@ -130,16 +132,31 @@ setup_ufw() {
 }
 
 setup_users() {
-  useradd -d "$HOME" -G docker,wheel -s "$(command -v zsh)" "$USERNAME"
-  chpasswd <<< "$USERNAME:$PASSWORD"
-  add_ssh_key_from_github "$GITHUB_USERNAME"
   passwd -l root
-  chown -R "$USERNAME:$USERNAME" "$HOME"
+  useradd -m -G docker,wheel -s "$(command -v zsh)" "$USER_NAME"
+  chpasswd <<< "$USER_NAME:$PASSWORD"
+  add_ssh_key_from_github "$GITHUB_USERNAME"
+  echo 'command -v starship &>/dev/null && eval "$(starship init bash)"' >> "$HOME/.bashrc"
+  echo 'command -v starship &>/dev/null && eval "$(starship init zsh)"'  >> "$HOME/.zshrc"
+  echo "$USER_NAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+  chown -R "$USER_NAME:$USER_NAME" "$HOME"
 }
 
 setup_services() {
-  systemctl daemon-reload
   systemctl enable "${SERVICES[@]}" || true
+  write_firstboot setup_ufw
+}
+
+write_firstboot() {
+  local func="$1"
+  type "$func" | sed 1d >> "$FIRSTBOOT_SCRIPT"
+  if [[ -n ${TRACE:-} ]]; then
+    echo "set -x" >> "$FIRSTBOOT_SCRIPT"
+  fi
+  echo "$func" >> "$FIRSTBOOT_SCRIPT"
+  if [[ -n ${TRACE:-} ]]; then
+    echo "set +x" >> "$FIRSTBOOT_SCRIPT"
+  fi
 }
 
 main "$@"

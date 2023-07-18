@@ -2,73 +2,75 @@ system_packages=(
   base-devel
   bash
   bash-completion
-  bat
+  bat  # cat alternative
   bind-tools
+  bottom  # top alternative
   btrfs-progs
   ca-certificates
   cifs-utils
   docker
   docker-compose
   dosfstools
-  dust
+  dust  # du alternative
   efibootmgr
-  fd
-  figlet
+  exa  # ls alternative
+  fd  # find alternative
+  figlet  # Prints ASCII art text and banners
   git
-  git-delta
+  git-delta  # git diff alternative
   go
   grub
-  htop
-  hyperfine
+  htop  # improved top
+  hyperfine  # benchmarking tool
   intel-ucode
-  just
+  just  # make alternative
   jq
-  lf
+  lf  # file browser similar to ranger
+  libfido2
   libutil-linux
   libva-intel-driver
   libvdpau-va-gl
   linux-firmware
-  linux-lts
-  linux-lts-headers
+  linux
+  linux-headers
   lm_sensors
+  lsd  # ls alternative
   lsof
-  monit
+  monit  # monitoring service
+  moreutils  # misc utils including sponge
   neovim
   netdata
   nushell
-  nut
+  nut  # Network UPS Tools
   openssh
   parallel
-  pass
+  pass  # Password manager
+  procs  # ps alternative
   python
   rdma-core
-  ripgrep
+  ripgrep # grep alternative
   rsync
   samba
+  sd  # sed alternative
   smartmontools
-  snapper
+  snapper  # snapshot manager
   sudo
-  starship
+  starship  # fancy prompt for bash and zsh
   tmux
-  ufw
+  ufw  # firewall
   wget
-  xf86-video-intel
-  yq
+  xh  # httpie alternative
+  yq  # like jq but for yaml
   zsh
   zsh-completions
 )
 
-ignore_packages=(
-  linux
-  linux-lts
-  linux-headers
-  linux-lts-headers
-)
-
 aur_packages=(
+  mkinitcpio-firmware  # Common firmware
+  ov  # Pager alternative to less, more, etc
   plex-media-server
-  rcm
-  zfs-linux-lts
-  zfs-linux-lts-headers
+  rcm  # dotfile manager
+  zfs-dkms
+  zfs-utils
 )
 

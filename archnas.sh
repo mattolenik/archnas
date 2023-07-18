@@ -37,8 +37,8 @@ EOF
   fi
 
   scp -r $PWD/archnas root@$TARGET_IP:~/archnas
-  ssh -t root@$TARGET_IP "GITHUB_USERNAME=$gh_user archnas/install.sh" | tee install.log
-  scp root@TARGET_IP:~/install.log .
+  ssh -t root@$TARGET_IP "HOST_NAME=${HOST_NAME:-} USER_NAME=${USER_NAME:-} DOMAIN=${DOMAIN:-} GITHUB_USERNAME=${gh_user:-} archnas/install.sh" | tee install.log
+  scp root@$TARGET_IP:~/install.log .
 }
 
 main

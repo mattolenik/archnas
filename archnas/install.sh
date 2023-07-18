@@ -29,11 +29,12 @@ source "${IMPORT}/common.sh"
 source "${IMPORT}/geolocation.sh"
 source "${IMPORT}/packages.sh"
 
-SWAP_PART_SIZE=${SWAP_PART_SIZE:-16384}
-BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
+JQ_URL="https://github.com/jqlang/jq/releases/download/jq-1.6/jq-linux64"
 
 # UEFI system partition location
 ESP=${ESP:-/boot/efi}
+SWAP_PART_SIZE=${SWAP_PART_SIZE:-16384}
+BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
 
 is_test() { [[ -n ${IS_TEST:-} ]]; }
 
@@ -43,13 +44,13 @@ install() {
   ask DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
   ask TIMEZONE "Enter timezone" "*" "${TIMEZONE:-auto-detect}"
   ask GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
-  ask USERNAME "Enter a username" "*" "${USERNAME:-nasuser}"
-  ask_password_confirm PASSWORD "Enter a password for ${USERNAME}" "*"
+  ask USER_NAME "Enter a username" "*" "${USER_NAME:-${HOST_NAME}user}"
+  ask_password_confirm PASSWORD "Enter a password for ${USER_NAME}" "*"
 
   echo
   local system_device
   select_disk system_device
-  confirm_disk "$system_device"
+  confirm_disk "$"
 
   timedatectl set-ntp true
 
@@ -87,7 +88,7 @@ install() {
   readarray -t base_packages < <(pacman -Sgq base | grep -Ev '^linux$')
 
   # Bootstrap
-  pacstrap -K /mnt ${ignore_packages[@]/#/--ignore } ${base_packages[@]} ${system_packages[@]}
+  pacstrap -K /mnt ${base_packages[@]} ${system_packages[@]}
 
   rsync -v $IMPORT/fs/copy/ /mnt/
 
@@ -100,18 +101,14 @@ install() {
     echo | cat - ${f} >> "$destFile"
   done
 
-  # Require manual upgrade of kernel so as to ensure it does not become out of sync with zfs-linux or zfs-linux-lts.
-  # The versions for linux and zfs-linux should always match.
-  echo "IgnorePkg=${ignore_packages[@]}" >> /mnt/etc/pacman.conf
-
   # Set hostname and domain
   echo "$HOST_NAME" > /mnt/etc/hostname
   echo "$DOMAIN" > /mnt/etc/domain
-  echo "127.0.0.1 $HOST_NAME.$DOMAIN $HOST_NAME" >> /mnt/etc/hosts
+  echo "127.0.0.1 localhost $HOST_NAME.$DOMAIN $HOST_NAME" >> /mnt/etc/hosts
 
   genfstab -U /mnt | tee /mnt/etc/fstab
 
-  export_vars ESP LOCALE USERNAME PASSWORD TIMEZONE GITHUB_USERNAME |
+  export_vars ESP LOCALE USER_NAME PASSWORD TIMEZONE GITHUB_USERNAME |
     cat - "$IMPORT/packages.sh" "$IMPORT/geolocation.sh" "$IMPORT/inside-chroot.sh" |
     arch-chroot /mnt /bin/bash
 
@@ -176,8 +173,8 @@ select_disk() {
 }
 
 install_prereqs() {
-  blue $'Installing prereqs...\n'
-  pacman --noconfirm -Syq jq rsync
+  curl -sSLo /usr/bin/jq "$JQ_URL"
+  chmod +x /usr/bin/jq
 }
 
 main() {
@@ -202,7 +199,7 @@ handle_option() {
       ;;
     username)
       check_opt "$opt" "$1" "$username_regex" "The username '$1' is not valid"
-      USERNAME="$1"
+      USER_NAME="$1"
       ;;
     hostname)
       check_opt "$opt" "$1"

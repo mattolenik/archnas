@@ -1,0 +1,11 @@
+[Unit]
+Description=First time config during first boot after installation
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/root/firstboot.sh
+
+[Install]
+WantedBy=multi-user.target
+
