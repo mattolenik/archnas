@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-TRACE=1
 [[ -n ${TRACE:-} ]] && set -x && export TRACE
 set -euo pipefail
 trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
@@ -26,7 +25,7 @@ main() {
   set_locale "$LOCALE"
   setup_users
   install_packages
-  setup_services
+  write_firstboot start_services setup_ufw
   install_bootloader
   cleanup
 }
@@ -142,18 +141,23 @@ setup_users() {
   chown -R "$USER_NAME:$USER_NAME" "$HOME"
 }
 
-setup_services() {
-  systemctl enable "${SERVICES[@]}" || true
-  write_firstboot setup_ufw
+start_services() {
+  systemctl enable --now "${SERVICES[@]}" || true
 }
 
 write_firstboot() {
-  local func="$1"
-  type "$func" | sed 1d >> "$FIRSTBOOT_SCRIPT"
+  echo "SERVICES=(${SERVICES[*]})" >> "$FIRSTBOOT_SCRIPT"
+  # Copy the functions into the script
+  for func in "$@"; do
+    type "$func" | sed 1d >> "$FIRSTBOOT_SCRIPT"
+  done
+  # Copy the function calls into the script, surrounding with set -x and set +x if TRACE is set
   if [[ -n ${TRACE:-} ]]; then
     echo "set -x" >> "$FIRSTBOOT_SCRIPT"
   fi
-  echo "$func" >> "$FIRSTBOOT_SCRIPT"
+  for func in "$@"; do
+    echo "$func" >> "$FIRSTBOOT_SCRIPT"
+  done
   if [[ -n ${TRACE:-} ]]; then
     echo "set +x" >> "$FIRSTBOOT_SCRIPT"
   fi
