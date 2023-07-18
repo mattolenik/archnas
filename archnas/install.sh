@@ -82,13 +82,8 @@ install() {
   mount --mkdir "$root_part" /mnt
   mount --mkdir "$boot_part" "/mnt${ESP}"
 
-  # The following installs 'base' but without the 'linux' package.
-  # This allows the desired kernel, e.g. 'linux-lts', it to be specified packages.sh
-  local base_packages
-  readarray -t base_packages < <(pacman -Sgq base | grep -Ev '^linux$')
-
   # Bootstrap
-  pacstrap -K /mnt ${base_packages[@]} ${system_packages[@]}
+  pacstrap -K /mnt base ${system_packages[@]}
 
   rsync -v $IMPORT/fs/copy/ /mnt/
 
