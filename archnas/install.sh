@@ -117,6 +117,7 @@ install() {
     umount -R /mnt
   fi
 
+  cp -f "$LOG_FILE" /mnt/var/log/install.log
   echo $'\nInstallation complete! Remove installation media and reboot.'
 }
 
