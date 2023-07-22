@@ -7,6 +7,7 @@ ARCH="${ARCH:-x86_64}"
 FIRSTBOOT_SCRIPT="/var/tmp/firstboot.sh"
 
 SERVICES=(
+  cockpit.socket
   docker
   dozzle
   frigate

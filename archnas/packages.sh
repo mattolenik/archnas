@@ -9,6 +9,8 @@ system_packages=(
   ca-certificates
   cifs-utils
   cockpit
+  cockpit-machines
+  cockpit-storaged
   docker
   docker-compose
   dosfstools
