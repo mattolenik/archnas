@@ -26,10 +26,7 @@ IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 source "${IMPORT}/hue.sh" @import
 source "${IMPORT}/args.sh"
 source "${IMPORT}/common.sh"
-source "${IMPORT}/geolocation.sh"
 source "${IMPORT}/packages.sh"
-
-JQ_URL="https://github.com/jqlang/jq/releases/download/jq-1.6/jq-linux64"
 
 # UEFI system partition location
 ESP=${ESP:-/boot/efi}
@@ -42,15 +39,21 @@ install() {
   ask LOCALE "Enter a locale" "*" "${LOCALE:-en_US}"
   ask HOST_NAME "Enter a hostname" "*" "${HOST_NAME:-archnas}"
   ask DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
-  ask TIMEZONE "Enter timezone" "*" "${TIMEZONE:-auto-detect}"
+  ask TIMEZONE "Enter timezone" "*" "${TIMEZONE:-America/Los_Angeles}"
   ask GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
   ask USER_NAME "Enter a username" "*" "${USER_NAME:-${HOST_NAME}user}"
   ask_password_confirm PASSWORD "Enter a password for ${USER_NAME}" "*"
 
+  export ESP LOCALE HOST_NAME DOMAIN TIMEZONE GITHUB_USERNAME USER_NAME PASSWORD
+
+  if ! timedatectl list-timezones | grep -q $TIMEZONE; then
+    fail "Timezone '$TIMEZONE' is not valid"
+  fi
+
   echo
   local system_device
   select_disk system_device
-  confirm_disk "$"
+  confirm_disk "$system_device"
 
   timedatectl set-ntp true
 
@@ -62,7 +65,7 @@ install() {
   wipefs -af "$system_device"
   parted "$system_device" mklabel gpt
   parted "$system_device" mkpart primary fat32 1MiB $((1+BOOT_PART_SIZE))MiB
-  set 1 esp on
+  parted "$system_device" set 1 esp on
   parted "$system_device" mkpart primary linux-swap $((1+BOOT_PART_SIZE))MiB $((1+BOOT_PART_SIZE+SWAP_PART_SIZE))MiB
   parted "$system_device" mkpart primary $((1+BOOT_PART_SIZE+SWAP_PART_SIZE))MiB 100%
 
@@ -85,7 +88,7 @@ install() {
   # Bootstrap
   pacstrap -K /mnt base ${system_packages[@]}
 
-  rsync -v $IMPORT/fs/copy/ /mnt/
+  rsync -rv $IMPORT/fs/copy/ /mnt/
 
   # The contents of the fs/append tree are not copied into the new install but added/appended to any existing files.
   # This provides a convenient way to modify configuration by just writing it in files and having it merged for you.
@@ -103,14 +106,12 @@ install() {
 
   genfstab -U /mnt | tee /mnt/etc/fstab
 
-  export_vars ESP LOCALE USER_NAME PASSWORD TIMEZONE GITHUB_USERNAME |
-    cat - "$IMPORT/packages.sh" "$IMPORT/geolocation.sh" "$IMPORT/inside-chroot.sh" |
-    arch-chroot /mnt /bin/bash
+  export_vars ESP GITHUB_USERNAME LOCALE PASSWORD TIMEZONE TRACE USER_NAME | cat - "$IMPORT/packages.sh" "$IMPORT/common.sh" "$IMPORT/inside-chroot.sh" | arch-chroot /mnt /bin/bash
 
   boxbanner "Done!" "$GREEN$BOLD_"
 
   local elapsed=$(( $(date +%s) - start_time ))
-  echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60)) seconds"
+  echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60 )) seconds"
 
   if ! is_test; then
     umount -R /mnt
@@ -168,7 +169,12 @@ select_disk() {
 }
 
 install_prereqs() {
-  curl -sSLo /usr/bin/jq "$JQ_URL"
+  local jq_url
+  jq_url="$(github_get_latest_release jqlang/jq | grep linux64)"
+  if [[ -z $jq_url ]]; then
+    fail "Failed to download jq, a prerequisite for installation"
+  fi
+  curl -sSLo /usr/bin/jq "$jq_url"
   chmod +x /usr/bin/jq
 }
 

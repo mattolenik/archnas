@@ -4,7 +4,7 @@ set -euo pipefail
 trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
 HOME="/home/$USER_NAME"
 ARCH="${ARCH:-x86_64}"
-FIRSTBOOT_SCRIPT="/root/firstboot.sh"
+FIRSTBOOT_SCRIPT="/var/tmp/firstboot.sh"
 
 SERVICES=(
   docker
@@ -15,9 +15,11 @@ SERVICES=(
   portainer
   smb
   sshd
+  systemd-networkd
+  systemd-resolved
   ufw
   zfs.target
-  zfs-mount.service
+  zfs-mount
 )
 
 main() {
@@ -25,7 +27,8 @@ main() {
   set_locale "$LOCALE"
   setup_users
   install_packages
-  write_firstboot start_services setup_ufw
+  setup_services
+  write_firstboot setup_ufw
   install_bootloader
   cleanup
 }
@@ -38,11 +41,11 @@ cleanup() {
   find /root /home -type f \( -name .bash_history -o -name .zsh_history \) | xargs rm -f
   # Remove leftovers from AUR builds
   rm -rf "$HOME/go"
+  passwd -l root
 }
 
 install_packages() {
   install_yay
-  pacman -Sy --refresh
   runuser -u "$USER_NAME" -- yay --noconfirm -Sy ${aur_packages[@]}
 }
 
@@ -56,10 +59,6 @@ add_ssh_key_from_github() {
   fi
 }
 
-get_github_latest_release() {
-  curl -sS "https://api.github.com/repos/$1/releases/latest" | jq -r '.assets[].browser_download_url'
-}
-
 install_bootloader() {
   grub-install --target=$ARCH-efi --efi-directory="$ESP" --bootloader-id=GRUB
   grub-mkconfig -o /boot/grub/grub.cfg
@@ -68,7 +67,7 @@ install_bootloader() {
 install_yay() {
   (
     cd "$(mktemp -d)"
-    curl -sSL "$(get_github_latest_release Jguer/yay | grep $ARCH)" | tar xz --strip-components=1
+    curl -sSL "$(github_get_latest_release Jguer/yay | grep $ARCH)" | tar xz --strip-components=1
     mv -f yay /usr/bin/
     mv -f yay.8 /usr/share/man/
     mkdir -p /etc/bashrc.d /etc/zshrc.d
@@ -78,11 +77,6 @@ install_yay() {
 }
 
 setup_clock() {
-  # shellcheck disable=SC2155
-  local tz="$(get_geoip_info "$(get_external_ip)" time_zone || true)"
-  if [[ $TIMEZONE == auto-detect ]]; then
-    export TIMEZONE="${tz:-UTC}"
-  fi
   echo "Setting timezone to $TIMEZONE"
   ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
   hwclock --systohc
@@ -133,18 +127,17 @@ setup_ufw() {
 }
 
 setup_users() {
-  passwd -l root
+  echo "Setting up user $USER_NAME"
   useradd -m -G docker,wheel -s "$(command -v zsh)" "$USER_NAME"
   chpasswd <<< "$USER_NAME:$PASSWORD"
   add_ssh_key_from_github "$GITHUB_USERNAME"
   echo 'command -v starship &>/dev/null && eval "$(starship init bash)"' >> "$HOME/.bashrc"
   echo 'command -v starship &>/dev/null && eval "$(starship init zsh)"'  >> "$HOME/.zshrc"
-  echo "$USER_NAME ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-  chown -R "$USER_NAME:$USER_NAME" "$HOME"
+  chown -c -R "$USER_NAME:$USER_NAME" "$HOME"
 }
 
-start_services() {
-  systemctl enable --now "${SERVICES[@]}" || true
+setup_services() {
+  systemctl enable "${SERVICES[@]}" || true
 }
 
 write_firstboot() {

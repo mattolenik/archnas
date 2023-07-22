@@ -3,8 +3,8 @@
 set -euo pipefail
 
 cleanup() {
- systemctl --no-block disable firstboot.service
- rm /etc/systemd/system/firstboot.service "$0"
+  systemctl --no-block disable firstboot.service
+  rm -f /etc/systemd/system/firstboot.service "$0"
 }
 
 trap cleanup EXIT

@@ -122,6 +122,7 @@ ask_password_confirm() {
     echo
   done
   read -r "$var" <<< "$pw1"
+  echo
 }
 
 function export_vars() {
@@ -132,4 +133,7 @@ function export_vars() {
     echo -e "$result"
 }
 
+github_get_latest_release() {
+  curl -sS "https://api.github.com/repos/$1/releases/latest" | awk -F'"' '/browser_download_url/ {print $4}'
+}
 

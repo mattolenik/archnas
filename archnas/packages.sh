@@ -8,6 +8,7 @@ system_packages=(
   btrfs-progs
   ca-certificates
   cifs-utils
+  cockpit
   docker
   docker-compose
   dosfstools
@@ -22,6 +23,7 @@ system_packages=(
   grub
   htop  # improved top
   hyperfine  # benchmarking tool
+  intel-media-driver
   intel-ucode
   just  # make alternative
   jq
@@ -54,8 +56,9 @@ system_packages=(
   sd  # sed alternative
   smartmontools
   snapper  # snapshot manager
-  sudo
   starship  # fancy prompt for bash and zsh
+  strace
+  sudo
   tmux
   ufw  # firewall
   wget
@@ -63,6 +66,12 @@ system_packages=(
   yq  # like jq but for yaml
   zsh
   zsh-completions
+
+  podman
+  podman-compose
+  podman-dnsname
+  cockpit-podman
+  cni-plugins
 )
 
 aur_packages=(
