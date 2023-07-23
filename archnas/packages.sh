@@ -54,6 +54,7 @@ system_packages=(
   rdma-core
   ripgrep # grep alternative
   rsync
+  ruby
   samba
   sd  # sed alternative
   smartmontools
