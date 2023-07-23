@@ -36,8 +36,9 @@ EOF
     echo "Aborting"; exit 1
   fi
 
-  scp -r $PWD/archnas root@$TARGET_IP:~/archnas
-  ssh -t root@$TARGET_IP "HOST_NAME=${HOST_NAME:-} USER_NAME=${USER_NAME:-} DOMAIN=${DOMAIN:-} GITHUB_USERNAME=${gh_user:-} archnas/install.sh"
+  local dist_url
+  dist_url="$(github_get_latest_release mattolenik/archnas | grep archnas.tar.gz)"
+  ssh -t root@$TARGET_IP "HOST_NAME=${HOST_NAME:-} USER_NAME=${USER_NAME:-} DOMAIN=${DOMAIN:-} GITHUB_USERNAME=${gh_user:-} curl -sSL "$dist_url" | tar -xz -C . && archnas/install.sh"
 }
 
 main
