@@ -11,6 +11,7 @@ SERVICES=(
   docker
   dozzle
   frigate
+  monit
   nmb
   plexmediaserver
   portainer
@@ -118,6 +119,7 @@ setup_ufw() {
   )
   local limit=(
     ssh
+    smtp
   )
   for svc in "${allow[@]}"; do
     ufw allow "$svc"

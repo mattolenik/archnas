@@ -88,16 +88,8 @@ install() {
   # Bootstrap
   pacstrap -K /mnt base ${system_packages[@]}
 
-  rsync -rv $IMPORT/fs/copy/ /mnt/
-
-  # The contents of the fs/append tree are not copied into the new install but added/appended to any existing files.
-  # This provides a convenient way to modify configuration by just writing it in files and having it merged for you.
-  for f in $(find $IMPORT/fs/append -type f); do
-    local destFile="/mnt/${f#$IMPORT/fs/append/}"
-    mkdir -p "$(dirname "$destFile")"
-    echo Appending "$f" to "$destFile"
-    echo | cat - ${f} >> "$destFile"
-  done
+  # Copy over supporting files
+  rsync -rv $IMPORT/fs/ /mnt/
 
   # Set hostname and domain
   echo "$HOST_NAME" > /mnt/etc/hostname
