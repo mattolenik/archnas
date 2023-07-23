@@ -56,7 +56,7 @@ add_ssh_key_from_github() {
   if [[ -n $username ]]; then
     echo "Allowing SSH for GitHub user $1"
     mkdir -p $HOME/.ssh
-    curl -sS "https://github.com/$username.keys" | tee -a $HOME/.ssh/authorized_keys
+    curl -sS "https://github.com/$username.keys" >> $HOME/.ssh/authorized_keys
     chmod -R 600 $HOME/.ssh
   fi
 }

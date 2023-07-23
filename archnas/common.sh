@@ -79,7 +79,7 @@ ask() {
 }
 
 fail() {
-  echo "$@" && exit 1
+  echo "$*" && exit 1
 }
 
 # Repeat a string n times
