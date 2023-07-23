@@ -9,13 +9,17 @@
 # TODO: Set up SMB user and SMB shares
 # TODO: Add help
 ##
-
 set -euo pipefail
 [[ -n ${TRACE:-} ]] && set -x && export TRACE
-#[[ $(uname -r) != *arch* ]] && echo "This script can only run on Arch Linux!" && exit 1
 
-# Elevate to root if necessary, usually only needed during testing
-[[ $EUID != 0 ]] && exec sudo "$0" "$@"
+[[ $(uname -r) != *arch* ]] && echo "This script can only run on Arch Linux!" && exit 1
+
+is_test() { [[ -n ${IS_TEST:-} ]]; }
+
+if is_test; then
+  # Elevate to root if necessary
+  if [[ $EUID != 0 ]]; then exec sudo "$0" "$@"; fi
+fi
 
 script_name="${0##*/}"
 LOG_FILE="${LOG_FILE:-${script_name%.*}.log}"
@@ -29,13 +33,10 @@ source "${IMPORT}/common.sh"
 source "${IMPORT}/packages.sh"
 
 # UEFI system partition location
-ESP=${ESP:-/boot/efi}
-SWAP_PART_SIZE=${SWAP_PART_SIZE:-16384}
-BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
-
-is_test() { [[ -n ${IS_TEST:-} ]]; }
+export ESP=${ESP:-/boot/efi}
 
 install() {
+  install_prereqs
   ask export LOCALE "Enter a locale" "*" "${LOCALE:-en_US}"
   ask export HOST_NAME "Enter a hostname" "*" "${HOST_NAME:-archnas}"
   ask export DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
@@ -49,6 +50,9 @@ install() {
   fi
 
   echo
+
+  ask export SWAPFILE_SIZE "Size of swapfile" "*" "${SWAPFILE_SIZE:-16g}"
+
   local system_device
   select_disk system_device
   confirm_disk "$system_device"
@@ -60,22 +64,19 @@ install() {
   echo
   echo "Output is logged to a file named `green "$LOG_FILE"`"
 
+  local boot_part_size=550
   wipefs -af "$system_device"
   parted "$system_device" mklabel gpt
-  parted "$system_device" mkpart primary fat32 1MiB $((1+BOOT_PART_SIZE))MiB
+  parted "$system_device" mkpart primary fat32 1MiB $((1+boot_part_size))MiB
   parted "$system_device" set 1 esp on
-  parted "$system_device" mkpart primary linux-swap $((1+BOOT_PART_SIZE))MiB $((1+BOOT_PART_SIZE+SWAP_PART_SIZE))MiB
-  parted "$system_device" mkpart primary $((1+BOOT_PART_SIZE+SWAP_PART_SIZE))MiB 100%
+  parted "$system_device" mkpart primary $((1+boot_part_size))MiB 100%
 
   local parts
   readarray -t parts < <(sfdisk -J "$system_device" | jq -r '.partitiontable.partitions[].node')
   local boot_part="${parts[0]}"
-  local swap_part="${parts[1]}"
-  local root_part="${parts[2]}"
+  local root_part="${parts[1]}"
 
   # Create partitions
-  mkswap "$swap_part"
-  swapon "$swap_part"
   mkfs.fat -F32 "$boot_part"
   mkfs.btrfs -f -L "system" "$root_part"
 
@@ -112,6 +113,18 @@ install() {
   fi
 
   echo $'\nInstallation complete! Remove installation media and reboot.'
+}
+
+install_prereqs() {
+  if ! command -v jq >/dev/null; then
+    local jq_url
+    jq_url="$(github_get_latest_release jqlang/jq | grep linux64)"
+    if [[ -z $jq_url ]]; then
+      fail "Failed to download jq, a prerequisite for installation"
+    fi
+    curl -sSLo /usr/bin/jq "$jq_url"
+    chmod +x /usr/bin/jq
+  fi
 }
 
 confirm_disk() {
@@ -162,73 +175,5 @@ select_disk() {
   done
 }
 
-install_prereqs() {
-  local jq_url
-  jq_url="$(github_get_latest_release jqlang/jq | grep linux64)"
-  if [[ -z $jq_url ]]; then
-    fail "Failed to download jq, a prerequisite for installation"
-  fi
-  curl -sSLo /usr/bin/jq "$jq_url"
-  chmod +x /usr/bin/jq
-}
+install
 
-main() {
-  install_prereqs
-  boxbanner "ArchNAS Installation" "$BLUE$BOLD_"
-  install
-}
-
-username_regex='^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$'
-
-handle_option() {
-  local __="$1"
-  local opt="$2"
-  shift 2
-  case $opt in
-    auto-approve)
-      export AUTO_APPROVE=1
-      ;;
-    target-disk)
-      check_opt "$opt" "$1"
-      TARGET_DISK="$1"
-      ;;
-    username)
-      check_opt "$opt" "$1" "$username_regex" "The username '$1' is not valid"
-      USER_NAME="$1"
-      ;;
-    hostname)
-      check_opt "$opt" "$1"
-      HOST_NAME="$1"
-      ;;
-    locale)
-      check_opt "$opt" "$1"
-      LOCALE="$1"
-      ;;
-    domain)
-      check_opt "$opt" "$1"
-      DOMAIN="$1"
-      ;;
-    timezone)
-      check_opt "$opt" "$1"
-      TIMEZONE="$1"
-      ;;
-    github_username)
-      check_opt "$opt" "$1"
-      GITHUB_USERNAME="$1"
-      ;;
-    swap-size)
-      check_opt "$opt" "$1" '^[0-9]{4,}$' "swap-size (megabytes) must be an integer value of at least 1000"
-      SWAP_PART_SIZE="$1"
-      ;;
-    password)
-      check_opt "$opt" "$1"
-      PASSWORD="$1"
-      ;;
-    *)
-      fail "Unknown option '$__$opt'"
-  esac
-}
-
-parse_args handle_option positionals "$@"
-
-main "$@"

@@ -8,13 +8,10 @@ FIRSTBOOT_SCRIPT="/var/tmp/firstboot.sh"
 
 SERVICES=(
   cockpit.socket
-  docker
-  dozzle
-  frigate
+  #frigate
   monit
   nmb
   plexmediaserver
-  portainer
   smb
   sshd
   systemd-networkd
@@ -25,6 +22,7 @@ SERVICES=(
 )
 
 main() {
+  setup_swap
   setup_clock
   set_locale "$LOCALE"
   setup_users
@@ -78,16 +76,23 @@ install_yay() {
   )
 }
 
+set_locale() {
+  echo "$1.UTF-8 UTF-8" > /etc/locale.gen
+  echo "LANG=$1.UTF-8" > /etc/locale.conf
+  locale-gen
+}
+
 setup_clock() {
   echo "Setting timezone to $TIMEZONE"
   ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
   hwclock --systohc
 }
 
-set_locale() {
-  echo "$1.UTF-8 UTF-8" > /etc/locale.gen
-  echo "LANG=$1.UTF-8" > /etc/locale.conf
-  locale-gen
+setup_swap() {
+  btrfs subvolume create /swap
+  btrfs filesystem mkswapfile --size ${SWAPFILE_SIZE} --uuid clear /swap/swapfile
+  swapon /swap/swapfile
+  echo "/swap/swapfile none swap defaults 0 0" >> /etc/fstab
 }
 
  # must be done in firstboot
@@ -97,7 +102,7 @@ setup_ufw() {
   ufw default deny incoming
 
   local allow=(
-    dozzle        # Docker container log viewer
+    cockpit       # Cockpit web UI
     frigate       # Frigate NVR web UI
     http          # HTTP on 80
     https         # HTTPS on 443
@@ -107,31 +112,36 @@ setup_ufw() {
     netbios-ns    # Samba
     netbios-ssn   # Samba
     nfs           # File sharing
+    nmbd          # Samba
     nut           # Network UPS Tools
-    portainer     # Portainer web UI
+    plex          # Plex web UI
     rsync         # Backup
     rtsp          # Used by Frigate
     rtsps         # Used by Frigate
+    samba         # File sharing
     smtp          # Mail relay
     ssh           # SSH
     syslog        # Accept logs from other hosts
     webrtc        # Used by Frigate
   )
-  local limit=(
-    ssh
-    smtp
-  )
   for svc in "${allow[@]}"; do
     ufw allow "$svc"
   done
-  for svc in "${limit[@]}"; do
-    ufw limit "$svc"
-  done
+  ufw limit ssh
+  ufw limit smtp 30/minute
 }
 
 setup_users() {
   echo "Setting up user $USER_NAME"
-  useradd -m -G docker,wheel -s "$(command -v zsh)" "$USER_NAME"
+  local groups=(
+    adm     # Read access of protected logs and journal files
+    log     # Read access of /var/log/
+    sys     # Right to administer printers in CUPS
+    uucp    # Serial ports and other /dev/tty* devices e.g. /dev/ttyUSB*
+    wheel   # sudo access
+  )
+
+  useradd -m -G "${groups// /,}" -s "$(command -v zsh)" "$USER_NAME"
   chpasswd <<< "$USER_NAME:$PASSWORD"
   add_ssh_key_from_github "$GITHUB_USERNAME"
   echo 'command -v starship &>/dev/null && eval "$(starship init bash)"' >> "$HOME/.bashrc"

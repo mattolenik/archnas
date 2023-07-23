@@ -1,3 +1,0 @@
-plex-media-server
-zfs-linux-lts
-zfs-linux-lts-headers

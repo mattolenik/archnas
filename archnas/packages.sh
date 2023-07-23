@@ -11,8 +11,6 @@ system_packages=(
   cockpit
   cockpit-machines
   cockpit-storaged
-  docker
-  docker-compose
   dosfstools
   dust  # du alternative
   efibootmgr
@@ -73,6 +71,7 @@ system_packages=(
   podman
   podman-compose
   podman-dnsname
+  podman-docker
   cockpit-podman
   cni-plugins
 )
