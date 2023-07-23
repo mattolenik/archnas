@@ -36,15 +36,13 @@ BOOT_PART_SIZE=${BOOT_PART_SIZE:-550}
 is_test() { [[ -n ${IS_TEST:-} ]]; }
 
 install() {
-  ask LOCALE "Enter a locale" "*" "${LOCALE:-en_US}"
-  ask HOST_NAME "Enter a hostname" "*" "${HOST_NAME:-archnas}"
-  ask DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
-  ask TIMEZONE "Enter timezone" "*" "${TIMEZONE:-America/Los_Angeles}"
-  ask GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
-  ask USER_NAME "Enter a username" "*" "${USER_NAME:-${HOST_NAME}user}"
-  ask_password_confirm PASSWORD "Enter a password for ${USER_NAME}" "*"
-
-  export ESP LOCALE HOST_NAME DOMAIN TIMEZONE GITHUB_USERNAME USER_NAME PASSWORD
+  ask export LOCALE "Enter a locale" "*" "${LOCALE:-en_US}"
+  ask export HOST_NAME "Enter a hostname" "*" "${HOST_NAME:-archnas}"
+  ask export DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
+  ask export TIMEZONE "Enter timezone" "*" "${TIMEZONE:-America/Los_Angeles}"
+  ask export GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
+  ask export USER_NAME "Enter a username" "*" "${USER_NAME:-${HOST_NAME}user}"
+  ask_password_confirm export PASSWORD "Enter a password for ${USER_NAME}" "*"
 
   if ! timedatectl list-timezones | grep -q $TIMEZONE; then
     fail "Timezone '$TIMEZONE' is not valid"
@@ -98,18 +96,21 @@ install() {
 
   genfstab -U /mnt | tee /mnt/etc/fstab
 
-  export_vars ESP GITHUB_USERNAME LOCALE PASSWORD TIMEZONE TRACE USER_NAME | cat - "$IMPORT/packages.sh" "$IMPORT/common.sh" "$IMPORT/inside-chroot.sh" | arch-chroot /mnt /bin/bash
+  # The rest of the install is done inside the chroot environment.
+  cat - "$IMPORT/packages.sh" "$IMPORT/common.sh" "$IMPORT/inside-chroot.sh" | arch-chroot /mnt /bin/bash
 
   boxbanner "Done!" "$GREEN$BOLD_"
 
   local elapsed=$(( $(date +%s) - start_time ))
   echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60 )) seconds"
+  echo
+  cp -f "$LOG_FILE" /mnt/var/log/install.log
+  echo "The installation log will be available at `green /var/log/install.log`"
 
   if ! is_test; then
     umount -R /mnt
   fi
 
-  cp -f "$LOG_FILE" /mnt/var/log/install.log
   echo $'\nInstallation complete! Remove installation media and reboot.'
 }
 

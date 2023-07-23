@@ -43,7 +43,7 @@ cleanup() {
   find /root /home -type f \( -name .bash_history -o -name .zsh_history \) | xargs rm -f
   # Remove leftovers from AUR builds
   rm -rf "$HOME/go"
-  passwd -l root
+  passwd -l root &>/dev/null
 }
 
 install_packages() {

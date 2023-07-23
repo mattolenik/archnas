@@ -1,4 +1,4 @@
-#s shellcheck shell=bash
+# shellcheck shell=bash
 ##
 # Prompt the user and wait for an answer. An optional default value
 # can be returned when the user skips the question by pressing ENTER.
@@ -16,6 +16,10 @@
 #IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 
 ask() {
+  if [[ $1 == "export" ]]; then
+    local should_export=1
+    shift
+  fi
   if [[ $1 == "-s" ]]; then
     local silent=1
     shift
@@ -54,13 +58,19 @@ ask() {
     if [[ ${!_options:-*} == "*" ]]; then
       # Populate the user-passed in variable
       read -r "$1" <<< "$_answer"
+      if [[ -n ${should_export:-} ]]; then
+        export "$1"
+      fi
       return
     fi
     # Trim and collapse whitespace and convert to lowercase
     local normal_opts="$(printf %s "${!_options}" | xargs echo -n | awk '{print tolower($0)}')"
     local opt_pattern='^('"${normal_opts// /|}"')$'
     if [[ $_answer =~ $opt_pattern ]]; then
-      read -r "$1" <<< "$_answer"
+      read -r $1 <<< "$_answer"
+      if [[ -n ${should_export:-} ]]; then
+        export "$1"
+      fi
       return
     else
       echo "ERROR: Invalid option, must be one of: ${normal_opts// /, }"
@@ -108,6 +118,10 @@ boxbanner() {
 }
 
 ask_password_confirm() {
+  if [[ $1 == "export" ]]; then
+    local should_export=1
+    shift
+  fi
   local var="$1"
   shift
   local pw1 pw2
@@ -122,15 +136,10 @@ ask_password_confirm() {
     echo
   done
   read -r "$var" <<< "$pw1"
+  if [[ -n ${should_export:-} ]]; then
+    export "$var"
+  fi
   echo
-}
-
-function export_vars() {
-    result=""
-    for varname in "$@"; do
-        result+="export $varname=${!varname}"$'\n'
-    done
-    echo -e "$result"
 }
 
 github_get_latest_release() {
