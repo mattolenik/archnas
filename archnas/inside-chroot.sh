@@ -8,7 +8,7 @@ FIRSTBOOT_SCRIPT="/var/tmp/firstboot.sh"
 
 SERVICES=(
   cockpit.socket
-  #frigate
+  frigate
   monit
   nmb
   plexmediaserver
@@ -50,13 +50,10 @@ install_packages() {
 }
 
 add_ssh_key_from_github() {
-  local username="$1"
-  if [[ -n $username ]]; then
-    echo "Allowing SSH for GitHub user $1"
-    mkdir -p $HOME/.ssh
-    curl -sS "https://github.com/$username.keys" >> $HOME/.ssh/authorized_keys
-    chmod -R 600 $HOME/.ssh
-  fi
+  echo "Allowing SSH for GitHub user $1"
+  mkdir -m 0700 -p $HOME/.ssh
+  curl -sS "https://github.com/$1.keys" >> $HOME/.ssh/authorized_keys
+  chmod 600 $HOME/.ssh/authorized_keys
 }
 
 install_bootloader() {
@@ -112,13 +109,11 @@ setup_ufw() {
     netbios-ns    # Samba
     netbios-ssn   # Samba
     nfs           # File sharing
-    nmbd          # Samba
     nut           # Network UPS Tools
     plex          # Plex web UI
     rsync         # Backup
     rtsp          # Used by Frigate
     rtsps         # Used by Frigate
-    samba         # File sharing
     smtp          # Mail relay
     ssh           # SSH
     syslog        # Accept logs from other hosts
@@ -134,8 +129,8 @@ setup_ufw() {
 setup_users() {
   echo "Setting up user $USER_NAME"
   local groups=(
-    adm     # Read access of protected logs and journal files
-    log     # Read access of /var/log/
+    adm     # Read access to protected logs and journal files
+    log     # Read access to /var/log/
     sys     # Right to administer printers in CUPS
     uucp    # Serial ports and other /dev/tty* devices e.g. /dev/ttyUSB*
     wheel   # sudo access

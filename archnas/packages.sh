@@ -17,6 +17,7 @@ system_packages=(
   exa  # ls alternative
   fd  # find alternative
   figlet  # Prints ASCII art text and banners
+  fzf   # fuzzy finder
   git
   git-delta  # git diff alternative
   go
@@ -40,6 +41,7 @@ system_packages=(
   lsof
   monit  # monitoring service
   moreutils  # misc utils including sponge
+  mosh
   neovim
   netdata
   nushell
