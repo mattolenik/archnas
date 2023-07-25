@@ -23,7 +23,7 @@ SERVICES=(
 )
 
 main() {
-  #setup_swap
+  setup_swap
   setup_clock
   set_locale "$LOCALE"
   setup_users
@@ -31,6 +31,7 @@ main() {
   setup_services
   write_firstboot setup_ufw
   install_bootloader
+  chmod -c -R 0600 /etc/credstore*
   cleanup
 }
 
@@ -129,15 +130,7 @@ setup_ufw() {
 
 setup_users() {
   echo "Setting up user $USER_NAME"
-  local groups=(
-    adm     # Read access to protected logs and journal files
-    log     # Read access to /var/log/
-    sys     # Right to administer printers in CUPS
-    uucp    # Serial ports and other /dev/tty* devices e.g. /dev/ttyUSB*
-    wheel   # sudo access
-  )
-
-  useradd -m -G "${groups// /,}" -s "$(command -v zsh)" "$USER_NAME"
+  useradd -m -G adm,log,sys,uucp,wheel -s "$(command -v zsh)" "$USER_NAME"
   chpasswd <<< "$USER_NAME:$PASSWORD"
   add_ssh_key_from_github "$GITHUB_USERNAME"
   echo 'command -v starship &>/dev/null && eval "$(starship init bash)"' >> "$HOME/.bashrc"
@@ -146,7 +139,7 @@ setup_users() {
 }
 
 setup_services() {
-  systemctl enable "${SERVICES[@]}" || true
+  systemctl enable "${SERVICES[@]}"
 }
 
 write_firstboot() {
@@ -169,5 +162,4 @@ write_firstboot() {
 
 main "$@"
 
-chmod -c -R 0600 /etc/credstore*
 
