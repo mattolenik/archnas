@@ -8,6 +8,7 @@ FIRSTBOOT_SCRIPT="/var/tmp/firstboot.sh"
 
 SERVICES=(
   cockpit.socket
+  firstboot
   frigate
   monit
   nmb

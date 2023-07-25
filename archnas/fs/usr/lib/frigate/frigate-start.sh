@@ -16,7 +16,7 @@ set -euo pipefail
     -v /media/frigate:/media/frigate \
     -v /etc/frigate.yml:/config/config.yml \
     -v /etc/localtime:/etc/localtime:ro \
-    -e FRIGATE_RTSP_PASSWORD="$(systemd-creds decrypt $CREDENTIALS_DIRECTORY/$CRED_NAME)" \
+    -e FRIGATE_RTSP_PASSWORD="$(systemd-creds decrypt $CRED_FILE)" \
     -p 5000:5000 \
     -p 8554:8554 \
     -p 8555:8555 ghcr.io/blakeblackshear/frigate:stable
