@@ -168,3 +168,5 @@ write_firstboot() {
 
 main "$@"
 
+chmod -c -R 0600 /etc/credstore*
+
