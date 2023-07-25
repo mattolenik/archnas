@@ -8,8 +8,10 @@ system_packages=(
   btrfs-progs
   ca-certificates
   cifs-utils
+  cni-plugins
   cockpit
   cockpit-machines
+  cockpit-podman
   cockpit-storaged
   dosfstools
   dust  # du alternative
@@ -47,14 +49,20 @@ system_packages=(
   nushell
   nut  # Network UPS Tools
   openssh
-  parallel
+  parallel parallel-docs
   pass  # Password manager
+  podman
+  podman-compose
+  podman-dnsname
+  podman-docker
   procs  # ps alternative
   python
+  python-pip
   rdma-core
   ripgrep # grep alternative
   rsync
   ruby
+  s-nail
   samba
   sd  # sed alternative
   smartmontools
@@ -69,13 +77,6 @@ system_packages=(
   yq  # like jq but for yaml
   zsh
   zsh-completions
-
-  podman
-  podman-compose
-  podman-dnsname
-  podman-docker
-  cockpit-podman
-  cni-plugins
 )
 
 aur_packages=(

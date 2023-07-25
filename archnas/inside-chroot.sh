@@ -23,7 +23,7 @@ SERVICES=(
 )
 
 main() {
-  setup_swap
+  #setup_swap
   setup_clock
   set_locale "$LOCALE"
   setup_users
