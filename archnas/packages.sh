@@ -14,6 +14,7 @@ system_packages=(
   cockpit-podman
   cockpit-storaged
   dosfstools
+  duf   # df alternative
   dust  # du alternative
   efibootmgr
   exa  # ls alternative
@@ -62,6 +63,7 @@ system_packages=(
   ripgrep # grep alternative
   rsync
   ruby
+  ruby-erb
   s-nail
   samba
   sd  # sed alternative
@@ -80,6 +82,7 @@ system_packages=(
 )
 
 aur_packages=(
+  moar  # Pager alternative
   mkinitcpio-firmware  # Common firmware
   ov  # Pager alternative to less, more, etc
   plex-media-server
