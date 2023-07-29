@@ -51,7 +51,7 @@ install() {
 
   echo
 
-  ask SWAPFILE_SIZE "Size of swapfile" "*" "${SWAPFILE_SIZE:-16g}"
+  ask export SWAPFILE_SIZE "Size of swapfile" "*" "${SWAPFILE_SIZE:-16g}"
 
   local system_device
   select_disk system_device
@@ -89,6 +89,11 @@ install() {
 
   # Copy over supporting files
   rsync -rv $IMPORT/fs/ /mnt/
+
+  if [[ "${system_packages[*]}" =~ "syslog-ng" ]]; then
+    # Logging configuration
+    printf '\nForwardToSyslog=no\n' >> /mnt/etc/systemd/journald.conf
+  fi
 
   # Set hostname and domain
   echo "$HOST_NAME" > /mnt/etc/hostname

@@ -15,6 +15,7 @@ SERVICES=(
   plexmediaserver
   smb
   sshd
+  syslog-ng@default.service
   systemd-networkd
   systemd-resolved
   ufw
