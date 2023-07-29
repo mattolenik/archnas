@@ -37,12 +37,7 @@ main() {
 
 cleanup() {
   rm -rf /tmp/*
-  rm -rf /var/log/*
-  # Remove bash and zsh history from all users
-  # shellcheck disable=SC2038
-  find /root /home -type f \( -name .bash_history -o -name .zsh_history \) | xargs rm -f
-  # Remove leftovers from AUR builds
-  rm -rf "$HOME/go"
+  #rm -rf "$HOME/go"
   passwd -l root &>/dev/null
 }
 
@@ -101,22 +96,21 @@ setup_ufw() {
   ufw default deny incoming
 
   local allow=(
-    cockpit                        # Cockpit web UI
-    frigate                        # Frigate NVR web UI
-    http                           # HTTP on 80
-    https                          # HTTPS on 443
-    mail
-    microsoft-ds                   # Samba
-    monit                          # Monit web UI
-    netbios-dgm                    # Samba
-    netbios-ns                     # Samba
-    netbios-ssn                    # Samba
-    nfs                            # File sharing
-    nut                            # Network UPS Tools
-    plexpass                       # Plex
-    rsync                          # Backup
-    ssh                            # SSH
-    syslog syslog-conn syslog-tls  # Accept logs from other hosts
+    cockpit         # Cockpit web UI
+    frigate         # Frigate NVR web UI
+    http            # HTTP on 80
+    https           # HTTPS on 443
+    mail            # SMTPS
+    monit           # Monit web UI
+    nfs             # File sharing
+    nut             # Network UPS Tools
+    plexpass        # Plex Media Server
+    rsync           # Backup
+    Samba           # Windows networking
+    ssh             # SSH
+    syslog          # syslog-ng server
+    syslog-conn     #
+    syslog-tls      #
   )
   # TODO: Make rules specific to applications that need the ports instead of system-wide
   for svc in "${allow[@]}"; do

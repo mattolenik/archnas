@@ -104,7 +104,7 @@ install() {
 
   # The rest of the install is done inside the chroot environment.
   local vars=(DOMAIN GITHUB_HOSTNAME HOST_NAME LOCALE PASSWORD SWAPFILE_SIZE TIMEZONE USER_NAME)
-  export_vars ${vars[@]} | cat - "$IMPORT/packages.sh" "$IMPORT/common.sh" "$IMPORT/inside-chroot.sh" | arch-chroot /mnt /bin/bash
+  export_vars ${vars[@]} | cat - "$IMPORT/packages.sh" "$IMPORT/common.sh" "$IMPORT/inside-chroot.sh" | arch-chroot /mnt /bin/bash || true
 
   boxbanner "Done!" "$GREEN$BOLD_"
 

@@ -19,7 +19,11 @@ description=Web-based UI for monitoring your system
 ports=2812/tcp
 
 [plexpass]
-title=Plex Media Server
+title=Plex
 description=Streaming media server
 ports=32400/tcp|32400/udp|32410/udp|32412:32414/udp|32469/tcp|1900/udp
 
+[syslog-ng]
+title=Syslog
+description=Syslog server with system-ng
+ports=514/udp|514/tcp|6514/tcp
