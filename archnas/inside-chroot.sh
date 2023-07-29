@@ -23,13 +23,12 @@ SERVICES=(
 )
 
 main() {
-  setup_swap
   setup_clock
   set_locale "$LOCALE"
   setup_users
   install_packages
   setup_services
-  write_firstboot setup_ufw
+  write_firstboot setup_swap setup_ufw
   install_bootloader
   chmod -c -R 0600 /etc/credstore*
   cleanup
@@ -142,6 +141,7 @@ setup_services() {
 }
 
 write_firstboot() {
+  echo "SWAPFILE_SIZE=${SWAPFILE_SIZE}" >> "$FIRSTBOOT_SCRIPT"
   echo "SERVICES=(${SERVICES[*]})" >> "$FIRSTBOOT_SCRIPT"
   # Copy the functions into the script
   for func in "$@"; do
@@ -160,5 +160,4 @@ write_firstboot() {
 }
 
 main "$@"
-
 
