@@ -67,7 +67,7 @@ install() {
   local boot_part_size=550
   wipefs -af "$system_device"
   parted "$system_device" mklabel gpt
-  parted "$system_device" mkpart primary fat32 1MiB $((1+boot_part_size))MiB 
+  parted "$system_device" mkpart primary fat32 1MiB $((1+boot_part_size))MiB
   parted "$system_device" set 1 esp on
   parted "$system_device" mkpart primary $((1+boot_part_size))MiB 100%
 
