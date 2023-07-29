@@ -67,7 +67,7 @@ install() {
   local boot_part_size=550
   wipefs -af "$system_device"
   parted "$system_device" mklabel gpt
-  parted "$system_device" mkpart primary fat32 1MiB $((1+boot_part_size))MiB
+  parted "$system_device" mkpart primary fat32 1MiB $((1+boot_part_size))MiB 
   parted "$system_device" set 1 esp on
   parted "$system_device" mkpart primary $((1+boot_part_size))MiB 100%
 
@@ -98,20 +98,7 @@ install() {
   genfstab -U /mnt | tee /mnt/etc/fstab
 
   # The rest of the install is done inside the chroot environment.
-  arch-chroot /mnt /bin/bash << EOF
-    export USER_NAME="$USER_NAME"
-    export PASSWORD="$PASSWORD"
-    export SWAPFILE_SIZE="$SWAPFILE_SIZE"
-    export GITHUB_USERNAME="$GITHUB_USERNAME"
-    export TIMEZONE="$TIMEZONE"
-    export LOCALE="$LOCALE"
-    export HOST_NAME="$HOST_NAME"
-    export DOMAIN="$DOMAIN"
-    export ESP="$ESP"
-    source "$IMPORT/packages.sh"
-    source "$IMPORT/common.sh"
-    source "$IMPORT/inside-chroot.sh"
-EOF
+  export_vars HOST_NAME DOMAIN USER_NAME PASSWORD GITHUB_HOSTNAME SWAPFILE_SIZE LOCALE TIMEZONE | cat - $IMPORT/packages.sh" "$IMPORT/common.sh" "$IMPORT/inside-chroot.sh" | arch-chroot /mnt /bin/bash
 
   boxbanner "Done!" "$GREEN$BOLD_"
 
@@ -185,6 +172,12 @@ select_disk() {
     else
       echo "That's not a valid option, please choose again."
     fi
+  done
+}
+
+export_vars() {
+  for var in "$@"; do
+    echo "export $var=\"${!var}\""
   done
 }
 
