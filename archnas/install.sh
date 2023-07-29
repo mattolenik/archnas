@@ -98,7 +98,7 @@ install() {
   genfstab -U /mnt | tee /mnt/etc/fstab
 
   # The rest of the install is done inside the chroot environment.
-  arch-chroot /mnt /bin/bash -- << EOCHROOT
+  arch-chroot /mnt /bin/bash << EOF
     export USER_NAME="$USER_NAME"
     export PASSWORD="$PASSWORD"
     export SWAPFILE_SIZE="$SWAPFILE_SIZE"
@@ -111,7 +111,7 @@ install() {
     source "$IMPORT/packages.sh"
     source "$IMPORT/common.sh"
     source "$IMPORT/inside-chroot.sh"
-EOCHROOT
+EOF
 
   boxbanner "Done!" "$GREEN$BOLD_"
 

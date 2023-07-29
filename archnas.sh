@@ -47,7 +47,7 @@ EOF
   fi
   clr
 
-  ssh -t root@$TARGET_IP "HOST_NAME=${HOST_NAME:-} USER_NAME=${USER_NAME:-} DOMAIN=${DOMAIN:-} GITHUB_USERNAME=${GITHUB_USERNAME:-} curl -sSL $dist_url | tar -xz && archnas/install.sh"
+  ssh -t root@$TARGET_IP "export HOST_NAME=${HOST_NAME:-} USER_NAME=${USER_NAME:-} DOMAIN=${DOMAIN:-} GITHUB_USERNAME=${GITHUB_USERNAME:-} && curl -sSL $dist_url | tar -xz && archnas/install.sh"
 }
 
 main
