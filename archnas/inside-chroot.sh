@@ -105,6 +105,7 @@ setup_ufw() {
     frigate                        # Frigate NVR web UI
     http                           # HTTP on 80
     https                          # HTTPS on 443
+    mail
     microsoft-ds                   # Samba
     monit                          # Monit web UI
     netbios-dgm                    # Samba
@@ -114,7 +115,6 @@ setup_ufw() {
     nut                            # Network UPS Tools
     plexpass                       # Plex
     rsync                          # Backup
-    smtp                           # Mail relay
     ssh                            # SSH
     syslog syslog-conn syslog-tls  # Accept logs from other hosts
   )
@@ -123,7 +123,6 @@ setup_ufw() {
     ufw allow "$svc"
   done
   ufw limit ssh
-  ufw limit smtp 30/minute
 }
 
 setup_users() {
