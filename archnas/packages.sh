@@ -75,7 +75,6 @@ system_packages=(
   sudo
   tmux
   ufw  # firewall
-  units  # easy unit conversion at the command line https://gnu.org/software/units
   wget
   xh  # httpie alternative
   yq  # like jq but for yaml
@@ -89,6 +88,7 @@ aur_packages=(
   ov  # Pager alternative to less, more, etc
   plex-media-server
   rcm  # dotfile manager
+  units  # easy unit conversion at the command line https://gnu.org/software/units
   zfs-dkms
   zfs-utils
 )
