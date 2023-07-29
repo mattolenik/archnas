@@ -75,6 +75,7 @@ system_packages=(
   sudo
   tmux
   ufw  # firewall
+  units  # easy unit conversion at the command line https://gnu.org/software/units
   wget
   xh  # httpie alternative
   yq  # like jq but for yaml

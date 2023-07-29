@@ -101,23 +101,22 @@ setup_ufw() {
   ufw default deny incoming
 
   local allow=(
-    cockpit       # Cockpit web UI
-    frigate       # Frigate NVR web UI
-    http          # HTTP on 80
-    https         # HTTPS on 443
-    microsoft-ds  # Samba
-    monit         # Monit web UI
-    netbios-dgm   # Samba
-    netbios-ns    # Samba
-    netbios-ssn   # Samba
-    nfs           # File sharing
-    nut           # Network UPS Tools
-    plex          # Plex web UI
-    rsync         # Backup
-    smtp          # Mail relay
-    ssh           # SSH
-    syslog        # Accept logs from other hosts
-    video         # RTSP, RTSPS, WebRTC, used by Frigate
+    cockpit                        # Cockpit web UI
+    frigate                        # Frigate NVR web UI
+    http                           # HTTP on 80
+    https                          # HTTPS on 443
+    microsoft-ds                   # Samba
+    monit                          # Monit web UI
+    netbios-dgm                    # Samba
+    netbios-ns                     # Samba
+    netbios-ssn                    # Samba
+    nfs                            # File sharing
+    nut                            # Network UPS Tools
+    plexpass                       # Plex
+    rsync                          # Backup
+    smtp                           # Mail relay
+    ssh                            # SSH
+    syslog syslog-conn syslog-tls  # Accept logs from other hosts
   )
   # TODO: Make rules specific to applications that need the ports instead of system-wide
   for svc in "${allow[@]}"; do

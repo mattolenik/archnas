@@ -6,20 +6,15 @@ ports=9090/tcp
 [frigate]
 title=Frigate
 description=Open source NVR built around real-time AI object detection
-ports=5000/tcp
+ports=5000/tcp|554/tcp|554/udp|8554/tcp|8554/udp|8555/tcp|8555/udp
 
 [monit]
 title=Monit
 description=Web-based UI for monitoring your system
 ports=2812/tcp
 
-[plex]
+[plexpass]
 title=Plex Media Server
 description=Streaming media server
-ports=32400,32410/udp|32412:32414/udp|32469/tcp|1900/udp
-
-[video]
-title=Real Time Streaming Protocol (Secure)
-description=RTSPS and WebRTC video streaming
-ports=554,8554,8555
+ports=32400/tcp|32400/udp|32410/udp|32412:32414/udp|32469/tcp|1900/udp
 
