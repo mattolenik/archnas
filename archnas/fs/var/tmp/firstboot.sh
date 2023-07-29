@@ -9,7 +9,9 @@ trap 'echo ERROR on line $LINENO in $script_name' ERR
 
 cleanup() {
   systemctl --no-block disable firstboot.service
-  rm -f /etc/systemd/system/firstboot.service "$0"
+  if (( $? == 0 )); then
+    rm -f /etc/systemd/system/firstboot.service "$0"
+  fi
 }
 
 trap cleanup EXIT

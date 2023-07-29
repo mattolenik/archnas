@@ -114,13 +114,12 @@ setup_ufw() {
     nut           # Network UPS Tools
     plex          # Plex web UI
     rsync         # Backup
-    rtsp          # Used by Frigate
-    rtsps         # Used by Frigate
     smtp          # Mail relay
     ssh           # SSH
     syslog        # Accept logs from other hosts
-    webrtc        # Used by Frigate
+    video         # RTSP, RTSPS, WebRTC, used by Frigate
   )
+  # TODO: Make rules specific to applications that need the ports instead of system-wide
   for svc in "${allow[@]}"; do
     ufw allow "$svc"
   done

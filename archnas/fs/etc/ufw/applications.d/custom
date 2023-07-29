@@ -1,13 +1,25 @@
-cockpit 9090/tcp
-frigate 5000/tcp
-monit 2812/tcp
-plex 32400/tcp        # Plex general
-plex 32400/udp        # Plex general
-plex 32410/udp        # Plex GDM network discovery
-plex 32412:32414/udp  # Plex GDM network discovery
-plex 32469/tcp        # Plex DLNA
-plex 1900/udp         # Plex DLNA
-rtsps 8554/tcp
-rtsps 8554/udp
-webrtc 8555/tcp
-webrtc 8555/udp
+[cockpit]
+title=Cockpit
+description=Web-based UI for managing your system
+ports=9090/tcp
+
+[frigate]
+title=Frigate
+description=Open source NVR built around real-time AI object detection
+ports=5000/tcp
+
+[monit]
+title=Monit
+description=Web-based UI for monitoring your system
+ports=2812/tcp
+
+[plex]
+title=Plex Media Server
+description=Streaming media server
+ports=32400,32410/udp|32412:32414/udp|32469/tcp|1900/udp
+
+[video]
+title=Real Time Streaming Protocol (Secure)
+description=RTSPS and WebRTC video streaming
+ports=554,8554,8555
+
