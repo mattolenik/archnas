@@ -8,4 +8,8 @@ If using Frigate, an RTSP password must be set otherwise Frigate will not start.
   After all your setup is done, remove this notice by running:
   sudo rm /etc/profile.d/greeting
 
+  If you have any failed services, they will appear here:
 EOF
+
+systemctl list-units --state=failed --no-pager
+
