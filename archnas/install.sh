@@ -95,9 +95,9 @@ install() {
   genfstab -U /mnt | tee /mnt/etc/fstab
 
   # The rest of the install is done inside the chroot environment
-  local vars=(DOMAIN GITHUB_HOSTNAME HOST_NAME LOCALE PASSWORD SWAPFILE_SIZE TIMEZONE USER_NAME)
+  local vars=(DOMAIN GITHUB_USERNAME HOST_NAME LOCALE PASSWORD SWAPFILE_SIZE TIMEZONE USER_NAME)
   local scripts=("packages.sh" "common.sh" "inside-chroot.sh")
-  export_vars ${vars[@]} | cat - ${scripts[@]/#/$IMPORT/} | arch-chroot /mnt /bin/bash
+  export_vars "${vars[@]}" | cat - "${scripts[@]/#/$IMPORT/}" | arch-chroot /mnt /bin/bash
 
   configure_smb
   configure_logging
