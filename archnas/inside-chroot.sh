@@ -31,16 +31,14 @@ main() {
   setup_services
   write_firstboot setup_swap setup_ufw
   install_bootloader
-  chmod -c -R 0600 /etc/credstore*
+  if ! chmod -c -R 0600 /etc/credstore*; then
+    echo "false???"
+  fi
   cleanup
 }
 
 cleanup() {
   rm -rf /tmp/*
-  rm -rf /var/log/*
-  # Remove bash and zsh history from all users
-  # shellcheck disable=SC2038
-  find /root /home -type f \( -name .bash_history -o -name .zsh_history \) | xargs rm -f
   # Remove leftovers from AUR builds
   rm -rf "$HOME/go"
   passwd -l root &>/dev/null
