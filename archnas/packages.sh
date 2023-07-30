@@ -72,7 +72,6 @@ system_packages=(
   snapper               # snapshot manager
   starship              # fancy prompt for bash and zsh
   strace
-  syslog-ng
   sudo
   tmux
   ufw                   # firewall
