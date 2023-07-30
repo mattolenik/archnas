@@ -92,21 +92,16 @@ install() {
   # Copy over supporting files
   rsync -rv $IMPORT/fs/ /mnt/
 
-  smb_config
-
-  # Logging configuration
-  printf '\nForwardToSyslog=no\n' >> /mnt/etc/systemd/journald.conf
-
-  # Set hostname and domain
-  echo "$HOST_NAME" > /mnt/etc/hostname
-  echo "$DOMAIN" > /mnt/etc/domain
-  echo "127.0.0.1 localhost $HOST_NAME.$DOMAIN $HOST_NAME" >> /mnt/etc/hosts
-
   genfstab -U /mnt | tee /mnt/etc/fstab
 
-  # The rest of the install is done inside the chroot environment.
+  # The rest of the install is done inside the chroot environment
   local vars=(DOMAIN GITHUB_HOSTNAME HOST_NAME LOCALE PASSWORD SWAPFILE_SIZE TIMEZONE USER_NAME)
-  export_vars ${vars[@]} | cat - "$IMPORT/packages.sh" "$IMPORT/common.sh" "$IMPORT/inside-chroot.sh" | arch-chroot /mnt /bin/bash || true
+  local scripts=("packages.sh" "common.sh" "inside-chroot.sh")
+  export_vars ${vars[@]} | cat - ${scripts[@]/#/$IMPORT/} | arch-chroot /mnt /bin/bash || true
+
+  configure_smb
+  configure_logging
+  configure_hosts
 
   boxbanner "Done!" "$GREEN$BOLD_"
 
@@ -123,7 +118,17 @@ install() {
   echo $'\nInstallation complete! Remove installation media and reboot.'
 }
 
-smb_config() {
+configure_hosts() {
+  echo "$HOST_NAME" > /mnt/etc/hostname
+  echo "$DOMAIN" > /mnt/etc/domain
+  echo "127.0.0.1 localhost $HOST_NAME.$DOMAIN $HOST_NAME" >> /mnt/etc/hosts
+}
+
+configure_logging() {
+  printf '\nForwardToSyslog=no\n' >> /mnt/etc/systemd/journald.conf
+}
+
+configure_smb() {
   mkdir -p /mnt/etc/samba
   cat << EOF > /mnt/etc/samba/smb.conf
 [global]
