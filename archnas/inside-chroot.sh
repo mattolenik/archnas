@@ -31,9 +31,7 @@ main() {
   setup_services
   write_firstboot setup_swap setup_ufw
   install_bootloader
-  if ! chmod -c -R 0600 /etc/credstore*; then
-    echo "false???"
-  fi
+  chmod -c -R 0600 /etc/credstore*
   cleanup
 }
 
@@ -95,6 +93,10 @@ setup_swap() {
  # must be done in firstboot
 setup_ufw() {
   ufw enable
+  ufw default allow outgoing
+  ufw default deny incoming
+
+  ufw route allow in on eno1 out on podman0
 
   local allow=(
     CIFS            # File and print sharing

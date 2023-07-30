@@ -46,6 +46,7 @@ system_packages=(
   moreutils             # misc utils including sponge
   mosh
   neovim
+  gnu-netcat
   netdata
   nushell
   nut                   # Network UPS Tools

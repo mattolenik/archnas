@@ -101,7 +101,7 @@ install() {
 
   configure_smb
   configure_logging
-  configure_hosts
+  configure_network_names
 
   boxbanner "Done!" "$GREEN$BOLD_"
 
@@ -118,10 +118,9 @@ install() {
   echo $'\nInstallation complete! Remove installation media and reboot.'
 }
 
-configure_hosts() {
+configure_network_names() {
   echo "$HOST_NAME" > /mnt/etc/hostname
   echo "$DOMAIN" > /mnt/etc/domain
-  echo "127.0.0.1 localhost $HOST_NAME.$DOMAIN $HOST_NAME" >> /mnt/etc/hosts
 }
 
 configure_logging() {

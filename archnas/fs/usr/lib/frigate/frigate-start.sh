@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+MEDIA_DIR="${MEDIA_DIR:-/media/frigate}"
+CONFIG_FILE="/etc/frigate.yml"
+
+mkdir -p "$MEDIA_DIR"
+
 password="$(systemd-creds decrypt "$CRED_FILE")"
 if [[ -z "$password" ]]; then
   echo "Could not find Frigate RTSP password, make sure you have run:"
@@ -20,8 +25,8 @@ fi
     --device /dev/bus/usb:/dev/bus/usb \
     --device /dev/dri/renderD128 \
     --shm-size=128mb \
-    -v /media/frigate:/media/frigate \
-    -v /etc/frigate.yml:/config/config.yml \
+    -v "$MEDIA_DIR:/media/frigate" \
+    -v "$CONFIG_DIR:/config/config.yml" \
     -v /etc/localtime:/etc/localtime:ro \
     -e FRIGATE_RTSP_PASSWORD="$password" \
     -p 5000:5000 \
