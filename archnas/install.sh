@@ -35,6 +35,8 @@ source "${IMPORT}/packages.sh"
 # UEFI system partition location
 export ESP=${ESP:-/boot/efi}
 
+export WINDOWS_WORKGROUP="${WINDOWS_WORKGROUP:-WORKGROUP}"
+
 install() {
   install_prereqs
   ask export LOCALE "Enter a locale" "*" "${LOCALE:-en_US}"
@@ -90,10 +92,10 @@ install() {
   # Copy over supporting files
   rsync -rv $IMPORT/fs/ /mnt/
 
-  if [[ "${system_packages[*]}" =~ "syslog-ng" ]]; then
-    # Logging configuration
-    printf '\nForwardToSyslog=no\n' >> /mnt/etc/systemd/journald.conf
-  fi
+  smb_config
+
+  # Logging configuration
+  printf '\nForwardToSyslog=no\n' >> /mnt/etc/systemd/journald.conf
 
   # Set hostname and domain
   echo "$HOST_NAME" > /mnt/etc/hostname
@@ -119,6 +121,21 @@ install() {
   fi
 
   echo $'\nInstallation complete! Remove installation media and reboot.'
+}
+
+smb_config() {
+  mkdir -p /mnt/etc/samba
+  cat << EOF > /mnt/etc/samba/smb.conf
+[global]
+   workgroup = $WINDOWS_WORKGROUP
+   server string = ArchNAS Samba Server %v
+   server role = standalone server
+   security = user
+   map to guest = never
+   dns proxy = no
+   logging = systemd
+   netbios name = $HOST_NAME
+EOF
 }
 
 install_prereqs() {

@@ -1,29 +1,30 @@
-[cockpit]
+[Cockpit]
 title=Cockpit
 description=Web-based UI for managing your system
 ports=9090/tcp
 
-[frigate]
+[Frigate]
 title=Frigate
 description=Open source NVR built around real-time AI object detection
 ports=5000/tcp|554/tcp|554/udp|8554/tcp|8554/udp|8555/tcp|8555/udp
 
-[mail]
+[Mail]
 title=SMTPS
 description=SMTP over TLS or SSL
 ports=465/tcp|587/tcp
 
-[monit]
+[Monit]
 title=Monit
 description=Web-based UI for monitoring your system
 ports=2812/tcp
 
-[plexpass]
+[Plex]
 title=Plex
 description=Streaming media server
 ports=32400/tcp|32400/udp|32410/udp|32412:32414/udp|32469/tcp|1900/udp
 
-[syslog-ng]
+[Syslog]
 title=Syslog
-description=Syslog server with system-ng
+description=Syslog server
 ports=514/udp|514/tcp|6514/tcp
+

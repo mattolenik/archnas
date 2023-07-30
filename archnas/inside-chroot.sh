@@ -7,6 +7,7 @@ ARCH="${ARCH:-x86_64}"
 FIRSTBOOT_SCRIPT="/var/tmp/firstboot.sh"
 
 SERVICES=(
+  avahi-daemon
   cockpit.socket
   firstboot
   frigate
@@ -15,7 +16,6 @@ SERVICES=(
   plexmediaserver
   smb
   sshd
-  syslog-ng@default.service
   systemd-networkd
   systemd-resolved
   ufw
@@ -101,30 +101,32 @@ setup_ufw() {
   ufw default deny incoming
 
   local allow=(
-    cockpit         # Cockpit web UI
-    frigate         # Frigate NVR web UI
+    CIFS            # File and print sharing
+    Cockpit         # Cockpit web UI
+    Frigate         # Frigate NVR web UI
     http            # HTTP on 80
     https           # HTTPS on 443
-    mail            # SMTPS
-    monit           # Monit web UI
-    microsoft-ds    # Samba
-    netbios-dgm     #
-    netbios-ns      #
-    netbios-ssn     #
-    nfs             # File sharing
+    Mail            # SMTPS for mail proxy
+    Monit           # Monit web UI
+    mosh            # Mobile shell https://mosh.org
+    NFS             # Network File Sharing
     nut             # Network UPS Tools
-    plexpass        # Plex
+    Plex            # Plex Server
     rsync           # Backup
     ssh             # SSH
-    syslog          # syslog-ng server
-    syslog-conn     #
-    syslog-tls      #
+    Syslog          # syslog server
+  )
+  local limit=(
+    mosh
+    ssh
   )
   # TODO: Make rules specific to applications that need the ports instead of system-wide
   for svc in "${allow[@]}"; do
     ufw allow "$svc"
   done
-  ufw limit ssh
+  for svc in "${limit[@]}"; do
+    ufw limit "$svc"
+  done
 }
 
 setup_users() {
