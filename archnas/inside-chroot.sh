@@ -97,8 +97,6 @@ setup_swap() {
  # must be done in firstboot
 setup_ufw() {
   ufw enable
-  ufw default allow outgoing
-  ufw default deny incoming
 
   local allow=(
     CIFS            # File and print sharing
