@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MEDIA_DIR="${MEDIA_DIR:-/media/frigate}"
-CONFIG_FILE="/etc/frigate.yml"
+RUNTIME_CONFIG="${RUNTIME_CONFIG}"
+MEDIA_DIR="${MEDIA_DIR}"
+CONFIG_FILE="${CONFIG_FILE:-/etc/frigate.yml}"
 
 mkdir -p "$MEDIA_DIR"
 
@@ -12,6 +13,8 @@ if [[ -z "$password" ]]; then
   echo "    echo 'mypassword' | systemd-creds encrypt - $CRED_FILE"
   exit 1
 fi
+
+sed "'s/__RTSP_PASSWORD__/$password/g'" "$CONFIG_FILE" > "$RUNTIME_CONFIG"
 
 /usr/bin/podman run \
     --cidfile="$CIDFILE" \
@@ -26,7 +29,7 @@ fi
     --device /dev/dri/renderD128 \
     --shm-size=128mb \
     -v "$MEDIA_DIR:/media/frigate" \
-    -v "$CONFIG_DIR:/config/config.yml" \
+    -v "$RUNTIME_CONFIG:/config/config.yml" \
     -v /etc/localtime:/etc/localtime:ro \
     -e FRIGATE_RTSP_PASSWORD="$password" \
     -p 5000:5000 \
