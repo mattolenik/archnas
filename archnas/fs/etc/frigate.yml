@@ -30,10 +30,10 @@ cameras:
   cam-fd:
     ffmpeg:
       inputs:
-        - path: 'rtsp://camera:__RTSP_PASSWORD__@cam-fd:554/cam/realmonitor?channel=1&subtype=0'
+        - path: 'rtsp://camera:__RTSP_PASSWORD__@cam-fd.11055.house:553/cam/realmonitor?channel=1&subtype=0'
           roles:
             - record
-        - path: 'rtsp://camera:__RTSP_PASSWORD__@cam-fd:554/cam/realmonitor?channel=1&subtype=1'
+        - path: 'rtsp://camera:__RTSP_PASSWORD__@cam-fd.11055.house:553/cam/realmonitor?channel=1&subtype=1'
           roles:
             - detect
     detect:
@@ -44,7 +44,7 @@ cameras:
 go2rtc:
   streams:
     cam-fd:
-      - 'rtsp://camera:__RTSP_PASSWORD__@cam-fd:554/cam/realmonitor?channel=1&subtype=0'
+      - 'rtsp://camera:__RTSP_PASSWORD__@cam-fd.11055.house:553/cam/realmonitor?channel=1&subtype=0'
 
 birdseye:
   enabled: True

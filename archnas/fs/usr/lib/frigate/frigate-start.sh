@@ -14,7 +14,7 @@ if [[ -z "$password" ]]; then
   exit 1
 fi
 
-sed "'s/__RTSP_PASSWORD__/$password/g'" "$CONFIG_FILE" > "$RUNTIME_CONFIG"
+sd __RTSP_PASSWORD__ "$password" < "$CONFIG_FILE" > "$RUNTIME_CONFIG"
 
 /usr/bin/podman run \
     --cidfile="$CIDFILE" \
