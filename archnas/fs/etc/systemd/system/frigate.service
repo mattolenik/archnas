@@ -11,6 +11,7 @@ Restart=on-failure
 TimeoutStopSec=70
 
 Environment=CIDFILE=%t/%n.ctr-id
+Environment=RUNTIME_CONFIG=%t/%n.config.yml
 EnvironmentFile=/etc/environment.d/frigate.conf
 
 ExecStart=/usr/lib/frigate/frigate-start.sh
