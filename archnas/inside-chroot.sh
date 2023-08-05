@@ -32,6 +32,7 @@ main() {
   write_firstboot setup_swap setup_ufw
   install_bootloader
   chmod -c -R 0600 /etc/credstore*
+  mkdir -p /var/cache/netdata
   cleanup
 }
 
