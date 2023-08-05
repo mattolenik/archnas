@@ -36,6 +36,7 @@ system_packages=(
   libutil-linux
   libva-intel-driver
   libvdpau-va-gl
+  libvirt               # Virtualization
   linux-firmware
   linux
   linux-headers
@@ -71,6 +72,7 @@ system_packages=(
   sd                    # sed alternative
   smartmontools
   snapper               # snapshot manager
+  sscg                  # Simple Signed Certificate Generator, used by Cockpit ZFS plugin
   starship              # fancy prompt for bash and zsh
   strace
   sudo
@@ -84,6 +86,7 @@ system_packages=(
 )
 
 aur_packages=(
+  #cockpit-zfs-manager
   moar                  # Pager alternative
   mkinitcpio-firmware   # Common firmware
   ov                    # Pager alternative to less, more, etc

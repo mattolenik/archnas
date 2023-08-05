@@ -11,6 +11,7 @@ SERVICES=(
   cockpit.socket
   firstboot
   frigate
+  libvirtd
   monit
   nmb
   plexmediaserver
