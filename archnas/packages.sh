@@ -59,7 +59,7 @@ system_packages=(
   pass                  # Password manager
   podman
   podman-compose
-  podman-dnsname
+  #podman-dnsname
   podman-docker
   procs                 # ps alternative
   python
