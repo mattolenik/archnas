@@ -22,8 +22,8 @@ if is_test; then
 fi
 
 script_name="${0##*/}"
-LOG_FILE="${LOG_FILE:-${script_name%.*}.log}"
-exec > >(tee -i "$LOG_FILE"); exec 2>&1
+#LOG_FILE="${LOG_FILE:-${script_name%.*}.log}"
+#exec > >(tee -i "$LOG_FILE"); exec 2>&1
 trap 'echo ERROR on line $LINENO in $script_name' ERR
 
 IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
@@ -64,7 +64,7 @@ install() {
   start_time="$(date +%s)"
   boxbanner "Installing..." "$GREEN$BOLD_"
   echo
-  echo "Output is logged to a file named `green "$LOG_FILE"`"
+  #echo "Output is logged to a file named `green "$LOG_FILE"`"
 
   local boot_part_size=550
   wipefs -af "$system_device"
@@ -108,8 +108,8 @@ install() {
   local elapsed=$(( $(date +%s) - start_time ))
   echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60 )) seconds"
   echo
-  cp -f "$LOG_FILE" /mnt/var/log/install.log
-  echo "The installation log will be available at `green /var/log/install.log`"
+  #cp -f "$LOG_FILE" /mnt/var/log/install.log
+  #echo "The installation log will be available at `green /var/log/install.log`"
 
   if ! is_test; then
     umount -R /mnt
