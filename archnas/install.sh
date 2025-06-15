@@ -103,7 +103,7 @@ install() {
     var/tmp
     var/www
   )
-  btrfs subvolume create ${subvolumes[@]/#//mnt/}
+  btrfs subvolume create -p ${subvolumes[@]/#//mnt/}
 
   # Bootstrap
   pacstrap -K /mnt base ${system_packages[@]}
