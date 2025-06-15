@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 system_packages=(
   base-devel
   bash
