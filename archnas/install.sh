@@ -90,7 +90,6 @@ install() {
     home
     opt
     root
-    .snapshots
     srv
     var/backups
     var/cache
