@@ -29,6 +29,7 @@ system_packages=(
   git-delta             # git diff alternative
   go
   grub
+  grub-btrfs
   htop                  # improved top
   hyperfine             # benchmarking tool
   intel-media-driver
@@ -76,6 +77,7 @@ system_packages=(
   sd                    # sed alternative
   smartmontools
   snapper               # snapshot manager
+  snap-pac
   #sscg                  # Simple Signed Certificate Generator, used by Cockpit ZFS plugin
   starship              # fancy prompt for bash and zsh
   strace
