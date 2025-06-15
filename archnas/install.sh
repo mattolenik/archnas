@@ -86,6 +86,8 @@ install() {
   mount --mkdir "$root_part" /mnt
   mount --mkdir "$boot_part" "/mnt${ESP}"
 
+  btrfs subvolume create /mnt/var /mnt/home /mnt/srv /mnt/opt /mnt/swap /mnt/root
+
   # Bootstrap
   pacstrap -K /mnt base ${system_packages[@]}
 
