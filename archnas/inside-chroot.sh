@@ -11,6 +11,7 @@ SERVICES=(
   cockpit.socket
   firstboot
   frigate
+  grub-btrfsd
   libvirtd
   monit
   nmb
