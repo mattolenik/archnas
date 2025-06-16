@@ -102,13 +102,13 @@ install() {
     var/tmp
     var/www
   )
-  btrfs subvolume create -p ${subvolumes[@]/#//mnt/}
+  btrfs subvolume create -p "${subvolumes[@]/#//mnt/}"
 
   # Bootstrap
-  pacstrap -K /mnt base ${system_packages[@]}
+  pacstrap -K /mnt base "${system_packages[@]}"
 
   # Copy over supporting files
-  rsync -rv $IMPORT/fs/ /mnt/
+  rsync -rv "$IMPORT/fs/" /mnt/
 
   genfstab -U /mnt | tee /mnt/etc/fstab
 

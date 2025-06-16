@@ -8,8 +8,7 @@ exec > >(tee -i "$LOG_FILE"); exec 2>&1
 trap 'echo ERROR on line $LINENO in $script_name' ERR
 
 cleanup() {
-  systemctl --no-block disable firstboot.service
-  if (( $? == 0 )); then
+  if systemctl --no-block disable firstboot.service; then
     rm -f /etc/systemd/system/firstboot.service "$0"
   fi
 }

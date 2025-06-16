@@ -52,25 +52,25 @@ cleanup() {
 
 install_packages() {
   install_yay
-  runuser -u "$USER_NAME" -- yay --noconfirm -Sy ${aur_packages[@]}
+  runuser -u "$USER_NAME" -- yay --noconfirm -Sy "${aur_packages[@]}"
 }
 
 add_ssh_key_from_github() {
   echo "Allowing SSH for GitHub user $1"
-  mkdir -m 0700 -p $HOME/.ssh
-  curl -sS "https://github.com/$1.keys" >> $HOME/.ssh/authorized_keys
-  chmod 600 $HOME/.ssh/authorized_keys
+  mkdir -m 0700 "$HOME/.ssh"
+  curl -sS "https://github.com/$1.keys" >> "$HOME/.ssh/authorized_keys"
+  chmod 600 "$HOME/.ssh/authorized_keys"
 }
 
 install_bootloader() {
-  grub-install --target=$ARCH-efi --efi-directory="$ESP" --bootloader-id=GRUB
+  grub-install --target="$ARCH-efi" --efi-directory="$ESP" --bootloader-id=GRUB
   grub-mkconfig -o /boot/grub/grub.cfg
 }
 
 install_yay() {
   (
     cd "$(mktemp -d)"
-    curl -sSL "$(github_get_latest_release Jguer/yay | grep $ARCH)" | tar xz --strip-components=1
+    curl -sSL "$(github_get_latest_release Jguer/yay | grep "$ARCH")" | tar xz --strip-components=1
     mv -f yay /usr/bin/
     mv -f yay.8 /usr/share/man/
     mkdir -p /etc/bashrc.d /etc/zshrc.d
@@ -93,7 +93,7 @@ setup_clock() {
 
 setup_swap() {
   btrfs subvolume create /swap
-  btrfs filesystem mkswapfile --size ${SWAPFILE_SIZE} --uuid clear /swap/swapfile
+  btrfs filesystem mkswapfile --size "$SWAPFILE_SIZE" --uuid clear /swap/swapfile
   swapon /swap/swapfile
   echo "/swap/swapfile none swap defaults 0 0" >> /etc/fstab
 }
@@ -140,7 +140,9 @@ setup_users() {
   useradd -m -G adm,log,sys,uucp,wheel -s "$(command -v zsh)" "$USER_NAME"
   chpasswd <<< "$USER_NAME:$PASSWORD"
   add_ssh_key_from_github "$GITHUB_USERNAME"
+  # shellcheck disable=SC2016
   echo 'command -v starship &>/dev/null && eval "$(starship init bash)"' >> "$HOME/.bashrc"
+  # shellcheck disable=SC2016
   echo 'command -v starship &>/dev/null && eval "$(starship init zsh)"'  >> "$HOME/.zshrc"
   chown -c -R "$USER_NAME:$USER_NAME" "$HOME"
 }
