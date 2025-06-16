@@ -6,7 +6,6 @@ system_packages=(
   bash-completion
   bat                   # cat alternative
   bind-tools
-  bottom                # top alternative
   btrfs-progs
   ca-certificates
   ca-certificates-mozilla
@@ -14,19 +13,19 @@ system_packages=(
   cifs-utils
   cni-plugins
   cockpit
+  cockpit-files
   cockpit-machines
+  cockpit-packagekit
   cockpit-podman
   cockpit-storaged
   dosfstools
   duf                   # df alternative
   dust                  # du alternative
   efibootmgr
-  exa                   # ls alternative
   fd                    # find alternative
   figlet                # Prints ASCII art text and banners
   fzf                   # fuzzy finder
   git
-  git-delta             # git diff alternative
   go
   grub
   grub-btrfs
@@ -34,7 +33,6 @@ system_packages=(
   hyperfine             # benchmarking tool
   intel-media-driver
   intel-ucode
-  just                  # make alternative
   jq
   lf                    # file browser similar to ranger
   libfido2
@@ -50,11 +48,10 @@ system_packages=(
   lsof
   monit                 # monitoring service
   moreutils             # misc utils including sponge
-  mosh
+  #mosh
   neovim
   gnu-netcat
   netdata
-  nushell
   nut                   # Network UPS Tools
   openssh
   parallel
@@ -72,17 +69,13 @@ system_packages=(
   rsync
   ruby
   ruby-erb
-  s-nail
   samba
-  sd                    # sed alternative
   smartmontools
   snapper               # snapshot manager
-  snap-pac
-  #sscg                  # Simple Signed Certificate Generator, used by Cockpit ZFS plugin
   starship              # fancy prompt for bash and zsh
-  strace
   sudo
   tmux
+  tree
   ufw                   # firewall
   wget
   xh                    # httpie alternative
@@ -92,9 +85,7 @@ system_packages=(
 )
 
 aur_packages=(
-  moar                  # Pager alternative
   mkinitcpio-firmware   # Common firmware
-  ov                    # Pager alternative to less, more, etc
   plex-media-server
   rcm                   # dotfile manager
   zfs-dkms

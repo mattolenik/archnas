@@ -16,3 +16,6 @@ cleanup() {
 
 trap cleanup EXIT
 
+# setup pacman snapshotting, done after installation to avoid snapshotting during install.
+pacman -S snap-pac
+
