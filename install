@@ -45,7 +45,7 @@ EOF
   detected_locale="$(awk -F. '{print $1}' <<< "$LANG")"
 
   ask export LOCALE "Enter a locale" "*" "${LOCALE:-$detected_locale}"
-  ask export HOST_NAME "Enter a hostname" "*" "${HOST_NAME:archnas}"
+  ask export HOST_NAME "Enter a hostname" "*" "${HOST_NAME:-archnas}"
   ask export DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
   ask export TIMEZONE "Enter timezone" "*" "${TIMEZONE:-America/Los_Angeles}"
   ask export GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
