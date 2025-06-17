@@ -12,7 +12,7 @@ SERVICES=(
   firstboot
   frigate
   grub-btrfsd
-  libvirtd
+  #libvirtd
   monit
   nmb
   plexmediaserver

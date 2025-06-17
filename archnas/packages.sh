@@ -39,7 +39,7 @@ system_packages=(
   libutil-linux
   libva-intel-driver
   libvdpau-va-gl
-  libvirt               # Virtualization
+  #libvirt               # Virtualization
   linux-firmware
   linux
   linux-headers
