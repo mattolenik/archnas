@@ -15,6 +15,7 @@ cleanup() {
 
 trap cleanup EXIT
 
+snapper -c root create-config /
 # setup pacman snapshotting, done after installation to avoid snapshotting during install.
 pacman -S snap-pac
 

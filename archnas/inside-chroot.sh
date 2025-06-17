@@ -12,7 +12,7 @@ SERVICES=(
   firstboot
   frigate
   grub-btrfsd
-  #libvirtd
+  libvirtd
   monit
   nmb
   plexmediaserver
@@ -32,16 +32,12 @@ main() {
   install_packages
   setup_services
   write_firstboot setup_swap setup_ufw
-  snapper_setup
   install_bootloader
   chmod -c -R 0600 /etc/credstore*
   mkdir -p /var/cache/netdata
   cleanup
 }
 
-snapper_setup() {
-  snapper -c root create-config /
-}
 
 cleanup() {
   rm -rf /tmp/*
