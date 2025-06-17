@@ -37,8 +37,6 @@ At this point you are ready to proceed with the installation steps below.
 EOF
   printf %s "$GREEN"
   ask TARGET_IP "(required) Enter the IP of the target machine:" "*" "${TARGET_IP:-}"
-  gh_user="$(awk -F ': ' '/github.com:/ {getline; if ($1 ~ /^[[:space:]]+user/) print $2}' ~/.config/gh/hosts.yml 2>/dev/null || true)"
-  ask export GITHUB_USERNAME "(optional) Allow SSH for a GitHub user:" "*" "$gh_user"
 
   local detected_locale
   detected_locale="$(awk -F. '{print $1}' <<< "$LANG")"
@@ -53,8 +51,10 @@ EOF
   ask export HOST_NAME "Enter a hostname" "*" "${HOST_NAME:-archnas}"
   ask export DOMAIN "Enter the domain" "*" "${DOMAIN:-${detected_domain:-${detected_domain2:-local}}}"
   ask export TIMEZONE "Enter timezone" "*" "${TIMEZONE:-${detected_timezone:-America/Los_Angeles}}"
-  ask export GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
   ask export USER_NAME "Enter a username" "*" "${USER_NAME:-$USER}"
+
+  gh_user="$(awk -F ': ' '/github.com:/ {getline; if ($1 ~ /^[[:space:]]+user/) print $2}' ~/.config/gh/hosts.yml 2>/dev/null || true)"
+  ask export GITHUB_USERNAME "(optional) Allow SSH for a GitHub user:" "*" "$gh_user"
 
   ask proceed "Proceed with installation on $TARGET_IP?" "*" "y"
   # shellcheck disable=SC2154
