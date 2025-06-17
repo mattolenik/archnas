@@ -39,18 +39,22 @@ EOF
   ask TARGET_IP "(required) Enter the IP of the target machine:" "*" "${TARGET_IP:-}"
   gh_user="$(awk -F ': ' '/github.com:/ {getline; if ($1 ~ /^[[:space:]]+user/) print $2}' ~/.config/gh/hosts.yml 2>/dev/null || true)"
   ask export GITHUB_USERNAME "(optional) Allow SSH for a GitHub user:" "*" "$gh_user"
-  echo
 
   local detected_locale
   detected_locale="$(awk -F. '{print $1}' <<< "$LANG")"
 
+  local detected_domain detected_domain2 detected_timezone
+  # TODO: make these work outside of macOS
+  detected_domain="$(scutil --dns | awk '/search domain/ {print $4}' | uniq | head -n1)"
+  detected_domain2="$(hostname -f | awk -F. '{print $2}')"
+  detected_timezone="$(ls -l /etc/localtime | awk -F'/zoneinfo/' '{print $2}')"
+
   ask export LOCALE "Enter a locale" "*" "${LOCALE:-$detected_locale}"
   ask export HOST_NAME "Enter a hostname" "*" "${HOST_NAME:-archnas}"
-  ask export DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
-  ask export TIMEZONE "Enter timezone" "*" "${TIMEZONE:-America/Los_Angeles}"
+  ask export DOMAIN "Enter the domain" "*" "${DOMAIN:-${detected_domain:-${detected_domain2:-local}}}"
+  ask export TIMEZONE "Enter timezone" "*" "${TIMEZONE:-${detected_timezone:-America/Los_Angeles}}"
   ask export GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
   ask export USER_NAME "Enter a username" "*" "${USER_NAME:-$USER}"
-
 
   ask proceed "Proceed with installation on $TARGET_IP?" "*" "y"
   # shellcheck disable=SC2154
