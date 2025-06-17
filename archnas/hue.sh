@@ -37,8 +37,15 @@ __hue__import_colors() {
 }
 
 use_color() {
-  [[ -n ${HUE_DISABLE:-} ]] && return 1
-  [[ -t 1 ]] && return 0
+  shopt -s nocasematch
+  if [[ "${COLOR:-}" == 0 ]] || [[ "${COLOR:-}" == off ]] || [[ "${COLOR:-}" == false ]] || [[ -n ${DISABLE_COLOR:-} ]] || [[ -n ${HUE_DISABLE:-} ]] || [[ -n ${NO_COLOR:-} ]]; then
+    return 1
+  fi
+  shopt -u nocasematch
+  if [[ -t 1 ]]; then
+    return 0
+  fi
+  return 1
 }
 
 ##
