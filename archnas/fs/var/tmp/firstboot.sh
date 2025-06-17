@@ -7,15 +7,10 @@ LOG_FILE="/var/log/${LOG_FILE:-${script_name%.*}.log}"
 exec > >(tee -i "$LOG_FILE"); exec 2>&1
 trap 'echo ERROR on line $LINENO in $script_name' ERR
 
-cleanup() {
-  if systemctl --no-block disable firstboot.service; then
-    rm -f /etc/systemd/system/firstboot.service "$0"
-  fi
-}
-
-trap cleanup EXIT
-
 snapper -c root create-config /
 # setup pacman snapshotting, done after installation to avoid snapshotting during install.
 pacman -S snap-pac
+
+systemctl --no-block disable firstboot.service
+rm -f /etc/systemd/system/firstboot.service "$0"
 

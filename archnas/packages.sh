@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2034
 
 system_packages=(
   base-devel
@@ -41,14 +42,13 @@ system_packages=(
   libvdpau-va-gl
   libvirt               # Virtualization
   linux-firmware
-  linux
-  linux-headers
+  linux-lts
+  linux-lts-headers
   lm_sensors
   lsd                   # ls alternative
   lsof
   monit                 # monitoring service
   moreutils             # misc utils including sponge
-  #mosh
   neovim
   gnu-netcat
   netdata
@@ -59,7 +59,6 @@ system_packages=(
   pass                  # Password manager
   podman
   podman-compose
-  #podman-dnsname
   podman-docker
   procs                 # ps alternative
   python
