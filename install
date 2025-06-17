@@ -41,13 +41,25 @@ EOF
   ask export GITHUB_USERNAME "(optional) Allow SSH for a GitHub user:" "*" "$gh_user"
   echo
 
+  local detected_locale
+  detected_locale="$(awk -F. '{print $1}' <<< "$LANG")"
+
+  ask export LOCALE "Enter a locale" "*" "${LOCALE:-$detected_locale}"
+  ask export HOST_NAME "Enter a hostname" "*" "${HOST_NAME:archnas}"
+  ask export DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
+  ask export TIMEZONE "Enter timezone" "*" "${TIMEZONE:-America/Los_Angeles}"
+  ask export GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
+  ask export USER_NAME "Enter a username" "*" "${USER_NAME:-$USER}"
+
+
   ask proceed "Proceed with installation on $TARGET_IP?" "*" "y"
+  # shellcheck disable=SC2154
   if [[ ${proceed,,} != y ]]; then
     fail "Aborting"
   fi
   clr
 
-  ssh -o "StrictHostKeyChecking no" -t root@$TARGET_IP "export HOST_NAME=${HOST_NAME:-} USER_NAME=${USER_NAME:-} DOMAIN=${DOMAIN:-} GITHUB_USERNAME=${GITHUB_USERNAME:-} && curl -sSL $dist_url | tar -xz && archnas/install.sh"
+  ssh -o "StrictHostKeyChecking no" -t "root@$TARGET_IP" "export LOCALE=$LOCALE HOST_NAME=$HOST_NAME DOMAIN=$DOMAIN TIMEZONE=$TIMEZONE GITHUB_USERNAME=${GITHUB_USERNAME:-} USER_NAME=$USER_NAME && curl -sSL $dist_url | tar -xz && archnas/install.sh"
 }
 
 main

@@ -39,15 +39,9 @@ export WINDOWS_WORKGROUP="${WINDOWS_WORKGROUP:-WORKGROUP}"
 
 install() {
   install_prereqs
-  ask export LOCALE "Enter a locale" "*" "${LOCALE:-en_US}"
-  ask export HOST_NAME "Enter a hostname" "*" "${HOST_NAME:-archnas}"
-  ask export DOMAIN "Enter the domain" "*" "${DOMAIN:-local}"
-  ask export TIMEZONE "Enter timezone" "*" "${TIMEZONE:-America/Los_Angeles}"
-  ask export GITHUB_USERNAME "Add public key of GitHub user for SSH access (optional)" "*" "${GITHUB_USERNAME:-}"
-  ask export USER_NAME "Enter a username" "*" "${USER_NAME:-${HOST_NAME}user}"
   ask_password_confirm export PASSWORD "Enter a password for ${USER_NAME}" "*"
 
-  if ! timedatectl list-timezones | grep -q $TIMEZONE; then
+  if ! timedatectl list-timezones | grep -q "$TIMEZONE"; then
     fail "Timezone '$TIMEZONE' is not valid"
   fi
 
