@@ -19,10 +19,10 @@ main() {
 
   boxbanner "Welcome to ArchNAS $version" "$BOLD_$BLUE"
   cat - << EOF
-Before installation begins, a few initial steps are required. After you have
-booted the Arch installation media, do the following from the initial command
-prompt:
 
+0. Boot Arch on your target machine
+
+🔴 IMPORTANT 🔴
 1. Set up the temporary install user:
    chpasswd <<< root:archnas
 
