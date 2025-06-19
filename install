@@ -20,16 +20,18 @@ main() {
   boxbanner "Welcome to ArchNAS $version" "$BOLD_$BLUE"
   cat - << EOF
 
+Instructions
+
 0. Boot Arch on your target machine
 
-🔴 IMPORTANT 🔴
-1. Set up the temporary install user:
-   chpasswd <<< root:archnas
+🔴 $(red IMPORTANT) 🔴
+1. Once booted, set this temporary password:
+   $(blue 'chpasswd <<< root:archnas')
 
 2. Find and note the machine's IP address:
-   ip address show
+   $(blue 'ip address show')
 
-Look for your Ethernet or WiFi device, it likely has a 192.x.x.x or 10.x.x.x IP address,
+Look for your Ethernet or WiFi device, it likely has a $(em 192.x.x.x) or $(em 10.x.x.x) IP address,
 which is typical for home routers.
 
 At this point you are ready to proceed with the installation steps below.
