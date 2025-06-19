@@ -3,7 +3,7 @@ Welcome to ArchNAS
 
 If using Frigate, an RTSP password must be set otherwise Frigate will not start. Be sure to run this:
 
-    echo your_rtsp_password | sudo systemd-creds encrypt - /etc/credstore.encrypted/frigate_rtsp_password
+    echo your_rtsp_password | sudo systemd-creds encrypt - $CREDENTIALS_DIRECTORY/frigate_rtsp_password
 
 
 After all your setup is done, remove this notice by running:

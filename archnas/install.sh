@@ -87,6 +87,7 @@ install() {
     srv
     var/backups
     var/cache
+    var/creds    # CREDENTIALS_DIRECTORY
     var/lib/containers
     var/lib/docker
     var/lib/libvirt
