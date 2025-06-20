@@ -8,7 +8,7 @@ exec > >(tee -i "$LOG_FILE"); exec 2>&1
 trap 'echo ERROR on line $LINENO in $script_name' ERR
 
 systemctl --no-block disable firstboot.service
-rm -f /etc/systemd/system/firstboot.service "$0"
+#rm -f /etc/systemd/system/firstboot.service "$0"
 
 # NOTICE: Don't insert firstboot logic here, use the write_firstboot functionality in inside-chroot.sh
 
