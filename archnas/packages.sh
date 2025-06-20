@@ -70,6 +70,7 @@ system_packages=(
   ruby
   ruby-erb
   samba
+  sd                    # sed replacement, used in distro, service startup scripts, tools, etc
   smartmontools
   snapper               # snapshot manager
   starship              # fancy prompt for bash and zsh
