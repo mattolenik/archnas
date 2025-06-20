@@ -33,7 +33,6 @@ main() {
   setup_services
   write_firstboot setup_swap setup_ufw
   install_bootloader
-  chmod -c -R 0600 /etc/credstore*
   mkdir -p /var/cache/netdata
   cleanup
 }
@@ -145,6 +144,8 @@ setup_users() {
 
 setup_services() {
   systemctl enable "${SERVICES[@]}"
+  export CREDENTIALS_DIRECTORY=/var/creds # TODO: remove or pass in
+  systemd-creds setup --tpm2-device=/dev/tpm0 --with-key=tpm2
 }
 
 write_firstboot() {
