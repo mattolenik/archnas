@@ -122,14 +122,15 @@ install() {
   local elapsed=$(( $(date +%s) - start_time ))
   echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60 )) seconds"
   echo
-  #cp -f "$LOG_FILE" /mnt/var/log/install.log
-  #echo "The installation log will be available at `green /var/log/install.log`"
+  cp -f "$LOG_FILE" /mnt/var/log/install.log
+  echo "The installation log will be available at `green /var/log/install.log`"
 
   if ! is_test; then
     umount -R /mnt
   fi
 
-  echo $'\nInstallation complete! Remove installation media and reboot.'
+  echo $'\nInstallation complete! Rebooting'
+  reboot
 }
 
 configure_network_names() {
@@ -157,7 +158,7 @@ EOF
 }
 
 install_prereqs() {
-  pacman -Sy --noconfirm jq
+  pacman -Sy --noconfirm jq &> /dev/null || fail "prerequisite jq failed to install"
 }
 
 confirm_disk() {

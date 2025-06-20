@@ -47,7 +47,7 @@ cleanup() {
   rm -rf "$HOME/go"
   passwd -d root
   passwd -l root
-  logout
+  exit 0
 }
 
 install_packages() {
