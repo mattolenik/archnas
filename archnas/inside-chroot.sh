@@ -5,7 +5,6 @@ trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
 HOME="/home/$USER_NAME"
 ARCH="${ARCH:-x86_64}"
 FIRSTBOOT_SCRIPT="/var/tmp/firstboot.sh"
-TPM_DEVICE="${TPM_DEVICE:-/dev/tpm0}"
 
 SERVICES=(
   avahi-daemon
@@ -33,7 +32,6 @@ main() {
   install_packages
   build_tools
   setup_services
-  setup_creds
   write_firstboot firstboot_setup_swap firstboot_setup_ufw firstboot_setup_creds firstboot_setup_snapper
   install_bootloader
   mkdir -p /var/cache/netdata
@@ -96,7 +94,7 @@ setup_clock() {
 }
 
 firstboot_setup_creds() {
-  mkdir -p "$CREDENTIALS_DIRECTORY/frigate/rtsp"
+  mkdir -p /creds/frigate/rtsp
 }
 
 firstboot_setup_snapper() {
@@ -165,16 +163,6 @@ setup_users() {
 
 setup_services() {
   systemctl enable "${SERVICES[@]}"
-}
-
-setup_creds() {
-  if [[ -e "$TPM_DEVICE" ]]; then
-    echo "Using TPM device $TPM_DEVICE for creds"
-    systemd-creds setup --tpm2-device="$TPM_DEVICE" --with-key=tpm2
-  else
-    echo "No TPM found, using unencrypted key for creds"
-    systemd-creds setup
-  fi
 }
 
 write_firstboot() {
