@@ -40,6 +40,7 @@ system_packages=(
   libfido2
   libutil-linux
   libva-intel-driver
+  libva-utils
   libvdpau-va-gl
   libvirt               # Virtualization
   linux-firmware
