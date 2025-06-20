@@ -9,7 +9,7 @@ trap 'echo ERROR on line $LINENO in $script_name' ERR
 
 snapper -c root create-config /
 # setup pacman snapshotting, done after installation to avoid snapshotting during install.
-pacman -S snap-pac
+pacman -S --noconfirm snap-pac
 
 systemctl --no-block disable firstboot.service
 rm -f /etc/systemd/system/firstboot.service "$0"
