@@ -1,3 +1,5 @@
+source /etc/environment
+
 cat << EOF
 Welcome to ArchNAS
 
