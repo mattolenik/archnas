@@ -34,7 +34,7 @@ main() {
   build_tools
   setup_services
   setup_creds
-  write_firstboot setup_swap setup_ufw
+  write_firstboot firstboot_setup_swap firstboot_setup_ufw firstboot_setup_creds firstboot_setup_snapper
   install_bootloader
   mkdir -p /var/cache/netdata
   cleanup
@@ -45,7 +45,9 @@ cleanup() {
   rm -rf /tmp/*
   # Remove leftovers from AUR builds
   rm -rf "$HOME/go"
-  passwd -l root &>/dev/null
+  passwd -d root
+  passwd -l root
+  logout
 }
 
 install_packages() {
@@ -93,15 +95,27 @@ setup_clock() {
   hwclock --systohc
 }
 
-setup_swap() {
+firstboot_setup_creds() {
+  mkdir -p "$CREDENTIALS_DIRECTORY/frigate/rtsp"
+}
+
+firstboot_setup_snapper() {
+  snapper -c root create-config /
+  # setup pacman snapshotting, done after installation to avoid snapshotting during install.
+  pacman -S --noconfirm snap-pac
+}
+
+
+# must be done in firstboot
+firstboot_setup_swap() {
   btrfs subvolume create /swap
   btrfs filesystem mkswapfile --size "$SWAPFILE_SIZE" --uuid clear /swap/swapfile
   swapon /swap/swapfile
   echo "/swap/swapfile none swap defaults 0 0" >> /etc/fstab
 }
 
- # must be done in firstboot
-setup_ufw() {
+# must be done in firstboot
+firstboot_setup_ufw() {
   ufw enable
   ufw default allow outgoing
   ufw default deny incoming

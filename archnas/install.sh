@@ -22,8 +22,8 @@ if is_test; then
 fi
 
 script_name="${0##*/}"
-#LOG_FILE="${LOG_FILE:-${script_name%.*}.log}"
-#exec > >(tee -i "$LOG_FILE"); exec 2>&1
+LOG_FILE="${LOG_FILE:-${script_name%.*}.log}"
+exec > >(tee -i "$LOG_FILE"); exec 2>&1
 trap 'echo ERROR on line $LINENO in $script_name' ERR
 
 IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
@@ -40,6 +40,7 @@ export SWAPFILE_SIZE="${SWAPFILE_SIZE:-16gb}"
 
 install() {
   install_prereqs
+
   ask_password_confirm export PASSWORD "Create a password for ${USER_NAME}" "*"
 
   if ! timedatectl list-timezones | grep -q "$TIMEZONE"; then
@@ -106,14 +107,15 @@ install() {
 
   genfstab -U /mnt | tee /mnt/etc/fstab
 
+  # Generate config that can't be stored as static files
+  configure_smb
+  configure_logging
+  configure_network_names
+
   # The rest of the install is done inside the chroot environment
   local vars=(DOMAIN GITHUB_USERNAME HOST_NAME LOCALE PASSWORD SWAPFILE_SIZE TIMEZONE USER_NAME)
   local scripts=("packages.sh" "common.sh" "inside-chroot.sh")
   export_vars "${vars[@]}" | cat - "${scripts[@]/#/$IMPORT/}" | arch-chroot /mnt /bin/bash
-
-  configure_smb
-  configure_logging
-  configure_network_names
 
   boxbanner "Done!" "$GREEN$BOLD_"
 
@@ -155,15 +157,7 @@ EOF
 }
 
 install_prereqs() {
-  if ! command -v jq >/dev/null; then
-    local jq_url
-    jq_url="$(github_get_latest_release jqlang/jq | grep linux64)"
-    if [[ -z $jq_url ]]; then
-      fail "Failed to download jq, a prerequisite for installation"
-    fi
-    curl -sSLo /usr/bin/jq "$jq_url"
-    chmod +x /usr/bin/jq
-  fi
+  pacman -Sy --noconfirm jq
 }
 
 confirm_disk() {
