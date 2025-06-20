@@ -32,6 +32,7 @@ system_packages=(
   grub-btrfs
   htop                  # improved top
   hyperfine             # benchmarking tool
+  inotify-tools         # required by grub-btrfsd
   intel-media-driver
   intel-ucode
   jq
