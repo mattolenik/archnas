@@ -5,6 +5,7 @@ trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
 HOME="/home/$USER_NAME"
 ARCH="${ARCH:-x86_64}"
 FIRSTBOOT_SCRIPT="/var/tmp/firstboot.sh"
+TPM_DEVICE="${TPM_DEVICE:-/dev/tpm0}"
 
 SERVICES=(
   avahi-daemon
@@ -30,7 +31,9 @@ main() {
   set_locale "$LOCALE"
   setup_users
   install_packages
+  build_tools
   setup_services
+  setup_creds
   write_firstboot setup_swap setup_ufw
   install_bootloader
   mkdir -p /var/cache/netdata
@@ -48,6 +51,10 @@ cleanup() {
 install_packages() {
   install_yay
   runuser -u "$USER_NAME" -- yay --noconfirm -Sy "${aur_packages[@]}"
+}
+
+build_tools() {
+  go build -o /usr/bin/tepid /usr/src/tepid/main.go  # templating tool to assist with inserting systemd creds into config files
 }
 
 add_ssh_key_from_github() {
@@ -144,8 +151,16 @@ setup_users() {
 
 setup_services() {
   systemctl enable "${SERVICES[@]}"
-  export CREDENTIALS_DIRECTORY=/var/creds # TODO: remove or pass in
-  systemd-creds setup --tpm2-device=/dev/tpm0 --with-key=tpm2
+}
+
+setup_creds() {
+  if [[ -e "$TPM_DEVICE" ]]; then
+    echo "Using TPM device $TPM_DEVICE for creds"
+    systemd-creds setup --tpm2-device="$TPM_DEVICE" --with-key=tpm2
+  else
+    echo "No TPM found, using unencrypted key for creds"
+    systemd-creds setup
+  fi
 }
 
 write_firstboot() {

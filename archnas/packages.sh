@@ -48,6 +48,7 @@ system_packages=(
   lm_sensors
   lsd                   # ls alternative
   lsof
+  man-db
   monit                 # monitoring service
   moreutils             # misc utils including sponge
   neovim
@@ -70,7 +71,7 @@ system_packages=(
   ruby
   ruby-erb
   samba
-  sd                    # sed replacement, used in distro, service startup scripts, tools, etc
+  sd                    # sed alternative
   smartmontools
   snapper               # snapshot manager
   starship              # fancy prompt for bash and zsh

@@ -12,17 +12,14 @@ TimeoutStopSec=70
 
 Environment=CIDFILE=%t/%n.ctr-id
 Environment=RUNTIME_CONFIG=%t/%n.config.yml
-EnvironmentFile=/etc/environment.d/frigate.conf
+EnvironmentFile=/etc/frigate.conf
 
-ExecStart=/usr/lib/frigate/frigate-start.sh
-ExecStop=/usr/bin/podman stop \
-        --ignore -t 10 \
-        --cidfile=%t/%n.ctr-id
-ExecStopPost=/usr/bin/podman rm \
-        -f \
-        --ignore -t 10 \
-        --cidfile=%t/%n.ctr-id
+ExecStart=/usr/lib/frigate/start.sh
+ExecStop=/usr/bin/podman stop --ignore -t 10 --cidfile=%t/%n.ctr-id
+
+ExecStopPost=/usr/bin/podman rm -f --ignore -t 10 --cidfile=%t/%n.ctr-id
 ExecStopPost=rm -f %t/%n.config.yml
+
 Type=notify
 NotifyAccess=all
 

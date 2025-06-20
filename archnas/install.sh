@@ -36,18 +36,17 @@ source "${IMPORT}/packages.sh"
 export ESP=${ESP:-/boot/efi}
 
 export WINDOWS_WORKGROUP="${WINDOWS_WORKGROUP:-WORKGROUP}"
+export SWAPFILE_SIZE="${SWAPFILE_SIZE:-16gb}"
 
 install() {
   install_prereqs
-  ask_password_confirm export PASSWORD "Enter a password for ${USER_NAME}" "*"
+  ask_password_confirm export PASSWORD "Create a password for ${USER_NAME}" "*"
 
   if ! timedatectl list-timezones | grep -q "$TIMEZONE"; then
     fail "Timezone '$TIMEZONE' is not valid"
   fi
 
   echo
-
-  ask export SWAPFILE_SIZE "Size of swapfile" "*" "${SWAPFILE_SIZE:-16g}"
 
   local system_device
   select_disk system_device
@@ -81,13 +80,13 @@ install() {
   mount --mkdir "$boot_part" "/mnt${ESP}"
 
   subvolumes=(
+    creds    # CREDENTIALS_DIRECTORY
     home
     opt
     root
     srv
     var/backups
     var/cache
-    var/creds    # CREDENTIALS_DIRECTORY
     var/lib/containers
     var/lib/docker
     var/lib/libvirt

@@ -1,11 +1,9 @@
-source /etc/environment
-
 cat << EOF
 Welcome to ArchNAS
 
-If using Frigate, an RTSP password must be set otherwise Frigate will not start. Be sure to run this:
+If using Frigate, remember to set RTSP passwords, otherwise Frigate will not start:
 
-    echo your_rtsp_password | sudo systemd-creds encrypt - $CREDENTIALS_DIRECTORY/frigate_rtsp_password
+    echo your_rtsp_password | sudo systemd-creds encrypt - $CREDENTIALS_DIRECTORY/frigate/rtsp/cam-fd
 
 
 After all your setup is done, remove this notice by running:
