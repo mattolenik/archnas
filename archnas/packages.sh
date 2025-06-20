@@ -87,7 +87,6 @@ system_packages=(
 )
 
 aur_packages=(
-  mkinitcpio-firmware   # Common firmware
   plex-media-server
   rcm                   # dotfile manager
   zfs-dkms
