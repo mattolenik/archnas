@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -exuo pipefail
 
 mkdir -p "$MEDIA_DIR"
 
 tepid "$CONFIG_FILE" > "$RUNTIME_CONFIG"
+
+cat "$RUNTIME_CONFIG"
 
 podman run \
     --cidfile="$CIDFILE" \

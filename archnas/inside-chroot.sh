@@ -4,7 +4,6 @@ set -euo pipefail
 trap 'echo ERROR on line $LINENO in file inside-chroot.sh' ERR
 HOME="/home/$USER_NAME"
 ARCH="${ARCH:-x86_64}"
-FIRSTBOOT_SCRIPT="/var/tmp/firstboot.sh"
 
 SERVICES=(
   avahi-daemon
@@ -32,7 +31,6 @@ main() {
   install_packages
   build_tools
   setup_services
-  write_firstboot firstboot_setup_swap firstboot_setup_ufw firstboot_setup_creds firstboot_setup_snapper
   install_bootloader
   mkdir -p /var/cache/netdata
   cleanup
@@ -93,62 +91,6 @@ setup_clock() {
   hwclock --systohc
 }
 
-firstboot_setup_creds() {
-  mkdir -p /creds/frigate/rtsp
-}
-
-firstboot_setup_snapper() {
-  snapper -c root create-config /
-  # setup pacman snapshotting, done after installation to avoid snapshotting during install.
-  pacman -S --noconfirm snap-pac
-}
-
-
-# must be done in firstboot
-firstboot_setup_swap() {
-  btrfs subvolume create -p /swap
-  btrfs filesystem mkswapfile --size "$SWAPFILE_SIZE" --uuid clear /swap/swapfile
-  swapon /swap/swapfile
-  echo "/swap/swapfile none swap defaults 0 0" >> /etc/fstab
-}
-
-# must be done in firstboot
-firstboot_setup_ufw() {
-  ufw enable
-  ufw default allow outgoing
-  ufw default deny incoming
-
-  ufw route allow in on eno1 out on podman0
-
-  local allow=(
-    CIFS            # File and print sharing
-    Cockpit         # Cockpit web UI
-    Frigate         # Frigate NVR web UI
-    http            # HTTP on 80
-    https           # HTTPS on 443
-    Mail            # SMTPS for mail proxy
-    Monit           # Monit web UI
-    mosh            # Mobile shell https://mosh.org
-    NFS             # Network File Sharing
-    nut             # Network UPS Tools
-    Plex            # Plex Server
-    rsync           # Backup
-    ssh             # SSH
-    Syslog          # syslog server
-  )
-  local limit=(
-    mosh
-    ssh
-  )
-  # TODO: Make rules specific to applications that need the ports instead of system-wide
-  for svc in "${allow[@]}"; do
-    ufw allow "$svc"
-  done
-  for svc in "${limit[@]}"; do
-    ufw limit "$svc"
-  done
-}
-
 setup_users() {
   echo "Setting up user $USER_NAME"
   useradd -m -G adm,log,sys,uucp,wheel -s "$(command -v zsh)" "$USER_NAME"
@@ -163,25 +105,6 @@ setup_users() {
 
 setup_services() {
   systemctl enable "${SERVICES[@]}"
-}
-
-write_firstboot() {
-  echo "SWAPFILE_SIZE=${SWAPFILE_SIZE}" >> "$FIRSTBOOT_SCRIPT"
-  echo "SERVICES=(${SERVICES[*]})" >> "$FIRSTBOOT_SCRIPT"
-  # Copy the functions into the script
-  for func in "$@"; do
-    type "$func" | sed 1d >> "$FIRSTBOOT_SCRIPT"
-  done
-  # Copy the function calls into the script, surrounding with set -x and set +x if TRACE is set
-  if [[ -n ${TRACE:-} ]]; then
-    echo "set -x" >> "$FIRSTBOOT_SCRIPT"
-  fi
-  for func in "$@"; do
-    echo "$func" >> "$FIRSTBOOT_SCRIPT"
-  done
-  if [[ -n ${TRACE:-} ]]; then
-    echo "set +x" >> "$FIRSTBOOT_SCRIPT"
-  fi
 }
 
 main "$@"
