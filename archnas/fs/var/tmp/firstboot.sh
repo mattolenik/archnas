@@ -50,7 +50,6 @@ setup_ufw() {
     https           # HTTPS on 443
     Mail            # SMTPS for mail proxy
     Monit           # Monit web UI
-    mosh            # Mobile shell https://mosh.org
     NFS             # Network File Sharing
     nut             # Network UPS Tools
     Plex            # Plex Server
@@ -59,7 +58,6 @@ setup_ufw() {
     Syslog          # syslog server
   )
   local limit=(
-    mosh
     ssh
   )
   # TODO: Make rules specific to applications that need the ports instead of system-wide
