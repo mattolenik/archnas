@@ -106,7 +106,7 @@ firstboot_setup_snapper() {
 
 # must be done in firstboot
 firstboot_setup_swap() {
-  btrfs subvolume create /swap
+  btrfs subvolume create -p /swap
   btrfs filesystem mkswapfile --size "$SWAPFILE_SIZE" --uuid clear /swap/swapfile
   swapon /swap/swapfile
   echo "/swap/swapfile none swap defaults 0 0" >> /etc/fstab
