@@ -36,7 +36,7 @@ source "${IMPORT}/packages.sh"
 export ESP=${ESP:-/boot/efi}
 
 export WINDOWS_WORKGROUP="${WINDOWS_WORKGROUP:-WORKGROUP}"
-export SWAPFILE_SIZE="${SWAPFILE_SIZE:-16gb}"
+export SWAPFILE_SIZE="${SWAPFILE_SIZE:-8G}"
 
 install() {
   install_prereqs
