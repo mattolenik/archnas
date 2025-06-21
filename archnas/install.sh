@@ -23,7 +23,7 @@ fi
 
 script_name="${0##*/}"
 LOG_FILE="${LOG_FILE:-${script_name%.*}.log}"
-exec > >(tee -i "$LOG_FILE"); exec 2>&1
+exec &> >(tee -a "$LOG_FILE")
 trap 'echo ERROR on line $LINENO in $script_name' ERR
 
 IMPORT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
