@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+[[ -n $TRACE ]] && set -x
 set -euo pipefail
 
 ARCHNAS_REPO="${ARCHNAS_REPO:-mattolenik/archnas}"
@@ -10,7 +11,7 @@ source "${IMPORT}/common.sh"
 
 main() {
   local dist_url
-  dist_url="$(github_get_latest_release "$ARCHNAS_REPO" | grep archnas.tar.gz)"
+  dist_url="$(github_get_latest_release "$ARCHNAS_REPO" | grep archnas.tar.gz || true)"
   if [[ -z $dist_url ]]; then
     fail "Could not get latest release of ArchNAS from https://github.com/$ARCHNAS_REPO"
   fi
