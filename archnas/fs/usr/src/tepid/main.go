@@ -18,8 +18,8 @@ func usage() error {
 	return fmt.Errorf("Usage: %s <template-file>", os.Args[0])
 }
 
-func parseShellVars(input string) (map[string]interface{}, error) {
-	result := make(map[string]interface{})
+func parseKeyValuePairs(input string) (map[string]any, error) {
+	result := make(map[string]any)
 	fields := strings.FieldsFunc(input, func(r rune) bool { return r == '\n' || r == '\t' })
 	for _, field := range fields {
 		field = strings.TrimSpace(field)
@@ -90,15 +90,15 @@ func mainE(args []string) error {
 		return fmt.Errorf("Error reading stdin: %w", err)
 	}
 	stdinStr := strings.TrimSpace(string(stdinBytes))
-	var params map[string]interface{}
+	params := map[string]any{}
 
 	if strings.HasPrefix(stdinStr, "{") {
 		err = json.Unmarshal(stdinBytes, &params)
 		if err != nil {
 			return fmt.Errorf("Error parsing JSON: %w", err)
 		}
-	} else {
-		params, err = parseShellVars(stdinStr)
+	} else if stdinStr != "" {
+		params, err = parseKeyValuePairs(stdinStr)
 		if err != nil {
 			return fmt.Errorf("Error parsing key=value: %w", err)
 		}
