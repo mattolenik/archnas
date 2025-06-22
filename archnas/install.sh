@@ -186,7 +186,9 @@ list_disks() {
 # $1 - out variable that will store the result
 select_disk() {
   if [[ -n ${AUTO_APPROVE:-} ]]; then
-    [[ -z $TARGET_DISK ]] && fail "Target disk must be specified when using auto-approve"
+    if [[ -z ${TARGET_DISK:-} ]]; then
+      fail "Target disk must be specified when using auto-approve"
+    fi
     read -r "$1" <<< "$TARGET_DISK"
     return 0
   fi
