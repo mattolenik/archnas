@@ -2,6 +2,7 @@
 # shellcheck disable=SC2034
 
 system_packages=(
+  archzfs-linux-lts     # Includes kernel and OpenZFS with compatible, in-sync versions
   base-devel
   bash
   bash-completion
@@ -44,8 +45,8 @@ system_packages=(
   libvdpau-va-gl
   libvirt               # Virtualization
   linux-firmware
-  linux-lts
-  linux-lts-headers
+  #linux-lts
+  #linux-lts-headers
   lm_sensors
   lsd                   # ls alternative
   lsof
@@ -90,7 +91,7 @@ system_packages=(
 aur_packages=(
   plex-media-server
   rcm                   # dotfile manager
-  zfs-dkms
-  zfs-utils
+  #zfs-dkms
+  #zfs-utils
 )
 

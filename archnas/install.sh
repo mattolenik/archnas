@@ -99,6 +99,8 @@ install() {
   )
   btrfs subvolume create -p "${subvolumes[@]/#//mnt/}"
 
+  add_repos
+
   # Bootstrap
   pacstrap -K /mnt base "${system_packages[@]}"
 
@@ -213,6 +215,21 @@ export_vars() {
   for var in "$@"; do
     echo "export $var=\"${!var}\""
   done
+}
+
+add_repos() {
+  # Add repo for archzfs (https://github.com/archzfs/archzfs/wiki)
+  cat << 'EOF' >> /etc/pacman.conf
+[archzfs]
+Server = https://archzfs.com/$repo/$arch
+Server = http://mirror.sum7.eu/archlinux/archzfs/$repo/$arch
+Server = http://mirror.sunred.org/archzfs/$repo/$arch
+Server = https://mirror.biocrafting.net/archlinux/archzfs/$repo/$arch
+Server = https://zxcvfdsa.com/archzfs/$repo/$arch
+EOF
+  pacman-key -r DDF7DB817396A49B2A2723F7403BD972F75D9D76
+  pacman-key --lsign-key DDF7DB817396A49B2A2723F7403BD972F75D9D76
+  pacman -Syu
 }
 
 install
