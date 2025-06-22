@@ -18,7 +18,7 @@ podman run \
     --mount type=tmpfs,target=/tmp/cache,tmpfs-size=1000000000 \
     --device /dev/bus/usb:/dev/bus/usb \
     --device /dev/dri/renderD128 \
-    --shm-size=128mb \
+    --shm-size="$SHM_SIZE" \
     -v "$MEDIA_DIR:/media/frigate" \
     -v "$RUNTIME_CONFIG:/config/config.yml" \
     -v /etc/localtime:/etc/localtime:ro \
