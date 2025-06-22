@@ -129,7 +129,7 @@ ask_password_confirm() {
     ask -s pw1 "$@"
     printf '\n[Confirm] '
     ask -s pw2 "$@"
-    if [[ $pw1 == $pw2 ]]; then
+    if [[ $pw1 == "$pw2" ]]; then
       break
     fi
     echo "Passwords do not match, please try again"

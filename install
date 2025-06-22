@@ -66,7 +66,7 @@ EOF
   fi
   clr
 
-  ssh -o "StrictHostKeyChecking no" -t "root@$TARGET_IP" "export LOCALE=$LOCALE HOST_NAME=$HOST_NAME DOMAIN=$DOMAIN TIMEZONE=$TIMEZONE GITHUB_USERNAME=${GITHUB_USERNAME:-} USER_NAME=$USER_NAME && curl -sSL $dist_url | tar -xz && archnas/install.sh"
+  ssh -o "StrictHostKeyChecking no" -t "root@$TARGET_IP" "export AUTO_APPROVE=${AUTO_APPROVE:-} TARGET_DISK=${TARGET_DISK:-} LOCALE=$LOCALE HOST_NAME=$HOST_NAME DOMAIN=$DOMAIN TIMEZONE=$TIMEZONE GITHUB_USERNAME=${GITHUB_USERNAME:-} USER_NAME=$USER_NAME && curl -sSL $dist_url | tar -xz && archnas/install.sh"
 }
 
 main
