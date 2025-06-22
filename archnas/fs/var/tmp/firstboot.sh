@@ -26,7 +26,6 @@ setup_snapper() {
 }
 
 
-# must be done in firstboot
 setup_swap() {
   btrfs subvolume create -p /swap
   btrfs filesystem mkswapfile --size "$SWAPFILE_SIZE" --uuid clear /swap/swapfile
@@ -34,7 +33,6 @@ setup_swap() {
   echo "/swap/swapfile none swap defaults 0 0" >> /etc/fstab
 }
 
-# must be done in firstboot
 setup_ufw() {
   ufw enable
   ufw default allow outgoing
@@ -60,7 +58,6 @@ setup_ufw() {
   local limit=(
     ssh
   )
-  # TODO: Make rules specific to applications that need the ports instead of system-wide
   for svc in "${allow[@]}"; do
     ufw allow "$svc"
   done
