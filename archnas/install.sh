@@ -102,7 +102,7 @@ install() {
   add_repos
 
   # Bootstrap
-  pacstrap -K /mnt base "${system_packages[@]}"
+  pacstrap -c -P /mnt base "${system_packages[@]}"
 
   # Copy over supporting files
   rsync -rv "$IMPORT/fs/" /mnt/
@@ -229,7 +229,6 @@ Server = https://zxcvfdsa.com/archzfs/$repo/$arch
 EOF
   pacman-key -r DDF7DB817396A49B2A2723F7403BD972F75D9D76
   pacman-key --lsign-key DDF7DB817396A49B2A2723F7403BD972F75D9D76
-  pacman -Syu
 }
 
 install
