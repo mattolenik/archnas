@@ -229,6 +229,7 @@ Server = https://zxcvfdsa.com/archzfs/$repo/$arch
 EOF
   pacman-key -r DDF7DB817396A49B2A2723F7403BD972F75D9D76
   pacman-key --lsign-key DDF7DB817396A49B2A2723F7403BD972F75D9D76
+  pacman -Syy --noconfirm
 }
 
 install
