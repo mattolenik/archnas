@@ -6,7 +6,6 @@ HOME="/home/$USER_NAME"
 ARCH="${ARCH:-x86_64}"
 
 SERVICES=(
-  avahi-daemon
   cockpit.socket
   firstboot
   frigate
