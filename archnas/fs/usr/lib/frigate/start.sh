@@ -5,8 +5,6 @@ mkdir -p "$MEDIA_DIR"
 
 tepid "$CONFIG_FILE" > "$RUNTIME_CONFIG"
 
-cat "$RUNTIME_CONFIG"
-
 podman run \
     --cidfile="$CIDFILE" \
     --cgroups=no-conmon \
@@ -22,7 +20,7 @@ podman run \
     -v "$MEDIA_DIR:/media/frigate" \
     -v "$RUNTIME_CONFIG:/config/config.yml" \
     -v /etc/localtime:/etc/localtime:ro \
-    -p 5000:5000 \
     -p 8554:8554 \
+    -p 8971:8971 \
     -p 8555:8555 "$FRIGATE_IMAGE:$FRIGATE_VERSION"
 
