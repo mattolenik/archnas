@@ -1,4 +1,4 @@
-TAR := $(shell [ $$(uname) == Darwin ] && echo gtar || echo tar)
+TAR := $(shell test $$(uname) = Darwin && echo gtar || echo tar)
 
 default: testrun dist
 
