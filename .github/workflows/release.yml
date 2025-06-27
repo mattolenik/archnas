@@ -13,9 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up build dependencies
-        run: sudo apt-get update && sudo apt-get install -y make tar
-
       - name: Build
         run: make dist
 
