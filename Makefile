@@ -1,9 +1,11 @@
+TAR := $(shell [ $$(uname) == Darwin ] && echo gtar || echo tar)
+
 default: testrun dist
 
 .PHONY: dist
 dist:
 	@mkdir -p dist
-	gtar -cvzf $@/archnas.tar.gz archnas
+	$(TAR) -cvzf $@/archnas.tar.gz archnas
 
 dist/archnas.box: archnas-box.json
 	packer build -force archnas-box.json
@@ -30,3 +32,4 @@ scrub: clean
 	rm -rf .vagrant/
 
 .PHONY: clean scrub start test testrun
+
