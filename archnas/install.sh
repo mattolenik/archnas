@@ -117,6 +117,8 @@ install() {
   local scripts=("packages.sh" "common.sh" "inside-chroot.sh")
   export_vars "${vars[@]}" | cat - "${scripts[@]/#/$IMPORT/}" | arch-chroot /mnt /bin/bash
 
+  cp -f /etc/resolv.conf /mnt/etc/resolv.conf
+
   boxbanner "Done!" "$GREEN$BOLD_"
 
   local elapsed=$(( $(date +%s) - start_time ))
