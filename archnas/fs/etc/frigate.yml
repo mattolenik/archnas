@@ -11,7 +11,10 @@ tls:
   enabled: False
 
 mqtt:
-  enabled: False
+  enabled: True
+  user: mosquito
+  password: {{ "frigate/mqttuser" | credential }}
+
 
 detectors:
   coral:
