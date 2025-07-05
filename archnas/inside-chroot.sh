@@ -67,7 +67,7 @@ install_bootloader() {
 install_yay() {
   local latest tmp_repo
   latest="$(github_get_latest_tag Jguer/yay)"
-  tmp_repo="$(mktemp -d -t yay)"
+  tmp_repo="$(mktemp -d -t yay.XXXXXX)"
   git clone https://github.com/Jguer/yay.git "$tmp_repo"
   (
     pushd "$tmp_repo"
