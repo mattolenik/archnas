@@ -6,9 +6,9 @@ HOME="/home/$USER_NAME"
 ARCH="${ARCH:-x86_64}"
 
 SERVICES=(
-  # note: frigate started during firstboot after other setup steps
   cockpit.socket
   firstboot
+  frigate
   grub-btrfsd
   libvirtd
   nmb
@@ -18,6 +18,7 @@ SERVICES=(
   systemd-networkd
   systemd-resolved
   ufw
+  webmin
   zfs.target
   zfs-mount
 )

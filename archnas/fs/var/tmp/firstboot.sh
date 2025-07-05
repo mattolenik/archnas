@@ -18,7 +18,6 @@ cleanup() {
 
 setup_frigate() {
   mkdir -p /creds/frigate/rtsp
-  systemctl enable --now frigate
 }
 
 setup_snapper() {
@@ -54,6 +53,7 @@ setup_ufw() {
     rsync   # Backup
     ssh     # SSH
     Syslog  # syslog server
+    Webmin  # Webmin web UI
   )
   local limit=(
     ssh

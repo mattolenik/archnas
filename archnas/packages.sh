@@ -90,6 +90,7 @@ system_packages=(
 aur_packages=(
   plex-media-server
   rcm # dotfile manager
+  webmin
   zfs-dkms
   zfs-utils
 )

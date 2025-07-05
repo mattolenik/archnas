@@ -23,3 +23,7 @@ title=Syslog
 description=Syslog server
 ports=514/udp|514/tcp|6514/tcp
 
+[Webmin]
+title=Webmin
+description=Webmin web UI
+ports=10000/tcp
