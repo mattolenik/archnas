@@ -65,16 +65,14 @@ install_bootloader() {
 }
 
 install_yay() {
-  local latest tmp_repo
-  latest="$(github_get_latest_tag Jguer/yay)"
-  tmp_repo="$(mktemp -d -t yay.XXXXXX)"
-  git clone https://github.com/Jguer/yay.git "$tmp_repo"
   (
-    pushd "$tmp_repo"
-    git checkout "$latest"
-    makepkg -si
-    popd
-    rm -rf "$tmp_repo"
+    cd "$(mktemp -d)"
+    curl -sSL "$(github_get_latest_release Jguer/yay | grep "$ARCH")" | tar xz --strip-components=1
+    mv -f yay /usr/bin/
+    mv -f yay.8 /usr/share/man/
+    mkdir -p /etc/bashrc.d /etc/zshrc.d
+    mv -f bash /etc/bashrc.d/yay
+    mv -f zsh /etc/zshrc.d/yay
   )
 }
 
