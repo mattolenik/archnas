@@ -73,5 +73,5 @@ import_zfs() {
 setup_swap
 setup_snapper
 setup_ufw
-import_zfs
+#import_zfs
 setup_frigate

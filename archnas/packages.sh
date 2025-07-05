@@ -56,6 +56,7 @@ system_packages=(
   netdata
   nut # Network UPS Tools
   openssh
+  ov # Pager, less replacement
   parallel
   parallel-docs
   pass # Password manager
