@@ -6,12 +6,11 @@ HOME="/home/$USER_NAME"
 ARCH="${ARCH:-x86_64}"
 
 SERVICES=(
+  # note: frigate started during firstboot after other setup steps
   cockpit.socket
   firstboot
-  frigate
   grub-btrfsd
   libvirtd
-  monit
   nmb
   plexmediaserver
   smb
@@ -35,7 +34,6 @@ main() {
   cleanup
 }
 
-
 cleanup() {
   rm -rf /tmp/*
   # Remove leftovers from AUR builds
@@ -51,13 +49,13 @@ install_packages() {
 }
 
 build_tools() {
-  go build -o /usr/bin/tepid /usr/src/tepid/main.go  # templating tool to assist with inserting systemd creds into config files
+  go build -o /usr/bin/tepid /usr/src/tepid/main.go # templating tool to assist with inserting systemd creds into config files
 }
 
 add_ssh_key_from_github() {
   echo "Allowing SSH for GitHub user $1"
   mkdir -m 0700 "$HOME/.ssh"
-  curl -sS "https://github.com/$1.keys" >> "$HOME/.ssh/authorized_keys"
+  curl -sS "https://github.com/$1.keys" >>"$HOME/.ssh/authorized_keys"
   chmod 600 "$HOME/.ssh/authorized_keys"
 }
 
@@ -67,20 +65,22 @@ install_bootloader() {
 }
 
 install_yay() {
+  local latest tmp_repo
+  latest="$(github_get_latest_tag Jguer/yay)"
+  tmp_repo="$(mktemp -d -t yay)"
+  git clone https://github.com/Jguer/yay.git "$tmp_repo"
   (
-    cd "$(mktemp -d)"
-    curl -sSL "$(github_get_latest_release Jguer/yay | grep "$ARCH")" | tar xz --strip-components=1
-    mv -f yay /usr/bin/
-    mv -f yay.8 /usr/share/man/
-    mkdir -p /etc/bashrc.d /etc/zshrc.d
-    mv -f bash /etc/bashrc.d/yay
-    mv -f zsh /etc/zshrc.d/yay
+    pushd "$tmp_repo"
+    git checkout "$latest"
+    makepkg -si
+    popd
+    rm -rf "$tmp_repo"
   )
 }
 
 set_locale() {
-  echo "$1.UTF-8 UTF-8" > /etc/locale.gen
-  echo "LANG=$1.UTF-8" > /etc/locale.conf
+  echo "$1.UTF-8 UTF-8" >/etc/locale.gen
+  echo "LANG=$1.UTF-8" >/etc/locale.conf
   locale-gen
 }
 
@@ -93,12 +93,12 @@ setup_clock() {
 setup_users() {
   echo "Setting up user $USER_NAME"
   useradd -m -G adm,log,sys,uucp,wheel -s "$(command -v zsh)" "$USER_NAME"
-  chpasswd <<< "$USER_NAME:$PASSWORD"
+  chpasswd <<<"$USER_NAME:$PASSWORD"
   add_ssh_key_from_github "$GITHUB_USERNAME"
   # shellcheck disable=SC2016
-  echo 'command -v starship &>/dev/null && eval "$(starship init bash)"' >> "$HOME/.bashrc"
+  echo 'command -v starship &>/dev/null && eval "$(starship init bash)"' >>"$HOME/.bashrc"
   # shellcheck disable=SC2016
-  echo 'command -v starship &>/dev/null && eval "$(starship init zsh)"'  >> "$HOME/.zshrc"
+  echo 'command -v starship &>/dev/null && eval "$(starship init zsh)"' >>"$HOME/.zshrc"
   chown -c -R "$USER_NAME:$USER_NAME" "$HOME"
 }
 
@@ -107,4 +107,3 @@ setup_services() {
 }
 
 main "$@"
-

@@ -31,7 +31,7 @@ ask() {
 
   # If AUTO_APPROVE is set, just return the default.
   if [[ -n ${AUTO_APPROVE:-} ]]; then
-    read -r "$1" <<< "${!_default:-}"
+    read -r "$1" <<<"${!_default:-}"
     return
   fi
 
@@ -57,7 +57,7 @@ ask() {
     _answer="${_answer:-${!_default:-}}"
     if [[ ${!_options:-*} == "*" ]]; then
       # Populate the user-passed in variable
-      read -r "$1" <<< "$_answer"
+      read -r "$1" <<<"$_answer"
       if [[ -n ${should_export:-} ]]; then
         export "$1"
       fi
@@ -67,7 +67,7 @@ ask() {
     local normal_opts="$(printf %s "${!_options}" | xargs echo -n | awk '{print tolower($0)}')"
     local opt_pattern='^('"${normal_opts// /|}"')$'
     if [[ $_answer =~ $opt_pattern ]]; then
-      read -r $1 <<< "$_answer"
+      read -r $1 <<<"$_answer"
       if [[ -n ${should_export:-} ]]; then
         export "$1"
       fi
@@ -87,7 +87,7 @@ fail() {
 # $2 - number of times to repeat
 str_repeat() {
   local i=0
-  while (( i++ < $2 )); do
+  while ((i++ < $2)); do
     printf %s "$1"
   done
 }
@@ -109,7 +109,7 @@ boxbanner() {
     color_str="${2:-}"
   fi
   padding_str="$(str_repeat ' ' "$padding_len")"
-  bar_str="$(str_repeat '═' $(( padding_len * 2 + ${#msg} )))"
+  bar_str="$(str_repeat '═' $((padding_len * 2 + ${#msg})))"
   printf '%s' "${color_str:-}"
   printf '╔%s╗\n' "$bar_str"
   printf '║%s║\n' "${padding_str}${msg}${padding_str}"
@@ -135,7 +135,7 @@ ask_password_confirm() {
     echo "Passwords do not match, please try again"
     echo
   done
-  read -r "$var" <<< "$pw1"
+  read -r "$var" <<<"$pw1"
   if [[ -n ${should_export:-} ]]; then
     export "$var"
   fi
@@ -143,6 +143,9 @@ ask_password_confirm() {
 }
 
 github_get_latest_release() {
-  curl -sS "https://api.github.com/repos/$1/releases/latest" | awk -F'"' '/browser_download_url/ {print $4}'
+  curl -sS "https://api.github.com/repos/$1/releases/latest" | jq .assets[].browser_download_url -r
 }
 
+github_get_latest_tag() {
+  curl -sS "https://api.github.com/repos/$1/releases/latest" | jq .tag_name -r
+}
