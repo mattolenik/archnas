@@ -33,6 +33,7 @@ main() {
   install_bootloader
   mkdir -p /var/cache/netdata
   cleanup
+  snapper create -d "post-install"
 }
 
 cleanup() {
@@ -41,7 +42,6 @@ cleanup() {
   rm -rf "$HOME/go"
   passwd -d root
   passwd -l root
-  exit 0
 }
 
 install_packages() {
