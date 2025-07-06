@@ -67,7 +67,7 @@ setup_ufw() {
 }
 
 import_zfs() {
-  zpool import -af
+  zpool import -a
 }
 
 setup_swap
