@@ -62,6 +62,7 @@ system_packages=(
   podman
   podman-compose
   podman-docker
+  polkit
   procs # ps alternative
   python
   python-pip
