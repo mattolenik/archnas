@@ -63,9 +63,9 @@ install() {
   local boot_part_size=550
   wipefs -af "$system_device"
   parted "$system_device" mklabel gpt
-  parted "$system_device" mkpart primary fat32 1MiB $((1+boot_part_size))MiB
+  parted "$system_device" mkpart primary fat32 1MiB $((1 + boot_part_size))MiB
   parted "$system_device" set 1 esp on
-  parted "$system_device" mkpart primary $((1+boot_part_size))MiB 100%
+  parted "$system_device" mkpart primary $((1 + boot_part_size))MiB 100%
 
   local parts
   readarray -t parts < <(sfdisk -J "$system_device" | jq -r '.partitiontable.partitions[].node')
@@ -81,7 +81,7 @@ install() {
   mount --mkdir "$boot_part" "/mnt${ESP}"
 
   subvolumes=(
-    creds    # CREDENTIALS_DIRECTORY
+    creds # CREDENTIALS_DIRECTORY
     home
     opt
     root
@@ -121,11 +121,11 @@ install() {
 
   boxbanner "Done!" "$GREEN$BOLD_"
 
-  local elapsed=$(( $(date +%s) - start_time ))
-  echo "Installation ran for $(( elapsed / 60 )) minutes and $(( elapsed % 60 )) seconds"
+  local elapsed=$(($(date +%s) - start_time))
+  echo "Installation ran for $((elapsed / 60)) minutes and $((elapsed % 60)) seconds"
   echo
   cp -f "$LOG_FILE" /mnt/var/log/install.log
-  echo "The installation log will be available at `green /var/log/install.log`"
+  echo "The installation log will be available at $(green /var/log/install.log)"
 
   if ! is_test; then
     umount -R /mnt
@@ -136,17 +136,17 @@ install() {
 }
 
 configure_network_names() {
-  echo "$HOST_NAME" > /mnt/etc/hostname
-  echo "$DOMAIN" > /mnt/etc/domain
+  echo "$HOST_NAME" >/mnt/etc/hostname
+  echo "$DOMAIN" >/mnt/etc/domain
 }
 
 configure_logging() {
-  printf '\nForwardToSyslog=no\n' >> /mnt/etc/systemd/journald.conf
+  printf '\nForwardToSyslog=no\n' >>/mnt/etc/systemd/journald.conf
 }
 
 configure_smb() {
   mkdir -p /mnt/etc/samba
-  cat << EOF > /mnt/etc/samba/smb.conf
+  cat <<EOF >/mnt/etc/samba/smb.conf
 [global]
    workgroup = $WINDOWS_WORKGROUP
    server string = ArchNAS Samba Server %v
@@ -160,14 +160,16 @@ EOF
 }
 
 install_prereqs() {
-  pacman -Sy --noconfirm jq &> /dev/null || fail "prerequisite jq failed to install"
+  printf "Installing prereqs..."
+  pacman -Sy --noconfirm jq &>/dev/null || fail "prerequisite jq failed to install"
+  printf "done\n\n"
 }
 
 confirm_disk() {
   if [[ -n ${AUTO_APPROVE:-} ]]; then return 0; fi
   local continue
-  echo "`red NOTICE:` ArchNAS is about to be installed onto disk: `red "$1"`"
-  echo "Continue? This will `red DESTROY` any existing data."
+  echo "$(red NOTICE:) ArchNAS is about to be installed onto disk: $(red "$1")"
+  echo "Continue? This will $(red DESTROY) any existing data."
   read -rp "Type YES to proceed, or anything else to abort: " continue
   if [[ $continue != "YES" ]]; then
     fail "Aborting installation"
@@ -177,10 +179,10 @@ confirm_disk() {
 # Find available, writeable disks for install. It will print
 # the following columns: name, size, model
 list_disks() {
-  lsblk -o type,ro,name,size,model -nrd | \
-    awk '/^disk 0/ {printf "/dev/%s %s %s\n", $3, $4, $5}' | \
-    sort | \
-    column -t | \
+  lsblk -o type,ro,name,size,model -nrd |
+    awk '/^disk 0/ {printf "/dev/%s %s %s\n", $3, $4, $5}' |
+    sort |
+    column -t |
     sed -E -e 's/\\x20/ /g' -e 's/[ ]+$//'
 }
 
@@ -191,7 +193,7 @@ select_disk() {
     if [[ -z ${TARGET_DISK:-} ]]; then
       fail "Target disk must be specified when using auto-approve"
     fi
-    read -r "$1" <<< "$TARGET_DISK"
+    read -r "$1" <<<"$TARGET_DISK"
     return 0
   fi
 
@@ -204,7 +206,7 @@ select_disk() {
   mapfile -t disks < <(list_disks)
   select disk in "${disks[@]}"; do
     # If input is a number and within the range of options
-    if [[ $REPLY =~ ^[0-9]$ ]] && (( REPLY > 0 )) && (( REPLY <= ${#disks[@]} )); then
+    if [[ $REPLY =~ ^[0-9]$ ]] && ((REPLY > 0)) && ((REPLY <= ${#disks[@]})); then
       read -r "$1" < <(echo "$disk" | awk '{print $1}')
       break
     else
@@ -220,4 +222,3 @@ export_vars() {
 }
 
 install
-

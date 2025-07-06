@@ -46,7 +46,7 @@ setup_ufw() {
     Frigate # Frigate NVR web UI
     http    # HTTP on 80
     https   # HTTPS on 443
-    Mail    # SMTPS for mail proxy
+    #Mail    # SMTPS for mail proxy
     NFS     # Network File Sharing
     nut     # Network UPS Tools
     Plex    # Plex Server
@@ -75,3 +75,5 @@ setup_snapper
 setup_ufw
 #import_zfs
 setup_frigate
+
+snapper create -d "first-boot"

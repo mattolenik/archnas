@@ -19,8 +19,8 @@ SERVICES=(
   systemd-resolved
   ufw
   webmin
-  zfs.target
   zfs-mount
+  zfs.target
 )
 
 main() {
@@ -32,6 +32,7 @@ main() {
   setup_services
   install_bootloader
   mkdir -p /var/cache/netdata
+  setup_issue_message
   cleanup
   snapper create -d "post-install"
 }
@@ -103,6 +104,17 @@ setup_users() {
 
 setup_services() {
   systemctl enable "${SERVICES[@]}"
+}
+
+setup_issue_message() {
+  mkdir -p /etc/issue.d
+  cat <<EOF >>/etc/issue.d/service-info.issue
+Cockpit UI at https://\O:9090
+
+Frigate UI at http://\O:8971
+
+Webmin  UI at https://\O:10000
+EOF
 }
 
 main "$@"
