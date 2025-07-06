@@ -110,6 +110,7 @@ setup_issue_message() {
   mkdir -p /etc/issue.d
   cat <<EOF >>/etc/issue.d/service-info.issue
 Cockpit UI at https://\O:9090
+Cockpit UI at https://\o:9090
 
 Frigate UI at http://\O:8971
 
