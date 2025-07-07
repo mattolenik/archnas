@@ -41,8 +41,6 @@ export SWAPFILE_SIZE="${SWAPFILE_SIZE:-8G}"
 install() {
   install_prereqs
 
-  ask_password_confirm export PASSWORD "Create a password for ${USER_NAME}" "*"
-
   if ! timedatectl list-timezones | grep -q "$TIMEZONE"; then
     fail "Timezone '$TIMEZONE' is not valid"
   fi
