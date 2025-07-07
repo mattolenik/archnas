@@ -62,7 +62,6 @@ system_packages=(
   podman
   podman-compose
   podman-docker
-  polkit
   procs # ps alternative
   python
   python-pip
@@ -90,7 +89,7 @@ system_packages=(
 aur_packages=(
   plex-media-server
   rcm # dotfile manager
-  webmin
+  #webmin
   zfs-dkms
   zfs-utils
 )
