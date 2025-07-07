@@ -35,7 +35,6 @@ main() {
   setup_issue_message
   setup_swap
   cleanup
-  snapper -c root create -d "Post install"
 }
 
 cleanup() {
