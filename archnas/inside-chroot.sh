@@ -119,10 +119,10 @@ EOF
 }
 
 setup_swap() {
-  btrfs subvolume create -p /var/run
-  local swapfile=/var/run/swapfile
-  btrfs filesystem mkswapfile --size "$SWAPFILE_SIZE" $swapfile
-  swapon $swapfile
+  btrfs subvolume create -p /swap
+  local swapfile="/swap/swapfile"
+  btrfs filesystem mkswapfile --size "$SWAPFILE_SIZE" "$swapfile"
+  swapon "$swapfile"
   echo "$swapfile none swap defaults 0 0" >>/etc/fstab
 }
 

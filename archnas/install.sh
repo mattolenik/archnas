@@ -92,7 +92,6 @@ install() {
     var/lib/machines
     var/log
     var/opt
-    var/run
     var/tmp
     var/www
   )
