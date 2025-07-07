@@ -223,6 +223,7 @@ export_vars() {
 }
 
 setup_archzfs_repo() {
+  mkdir -p /mnt/etc
   tee -a /etc/pacman.conf /mnt/etc/pacman.conf <<EOF
 [archzfs]
 SigLevel = Never
