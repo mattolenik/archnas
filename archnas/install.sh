@@ -56,7 +56,7 @@ install() {
   start_time="$(date +%s)"
   boxbanner "Installing..." "$GREEN$BOLD_"
   echo
-  #echo "Output is logged to a file named `green "$LOG_FILE"`"
+  echo "Output is logged to a file named `green "$LOG_FILE"`"
 
   local boot_part_size=550
   wipefs -af "$system_device"
