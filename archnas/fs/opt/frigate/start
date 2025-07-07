@@ -1,18 +1,26 @@
 #!/usr/bin/env bash
-set -exuo pipefail
+[[ -n "${TRACE:-}" ]] && set -x
+set -euo pipefail
 
 mkdir -p "$MEDIA_DIR"
 mkdir -p "$CONFIG_DIR"
 
-tepid "$CONFIG_FILE" > "$RUNTIME_CONFIG"
+cat << EOF > "$RUNTIME_CONFIG"
+# ❗ GENERATED FILE — DO NOT EDIT
+# ❗ Edit /etc/frigate.yml instead
+EOF
+
+tepid "$CONFIG_FILE" >> "$RUNTIME_CONFIG"
 
 podman run \
+    --conmon-pidfile="$PIDFILE" \
     --cidfile="$CIDFILE" \
     --cgroups=no-conmon \
-    --rm \
     --sdnotify=conmon \
+    --rm \
+    --tty \
+    --attach stdout \
     --replace \
-    -d \
     --privileged \
     --name frigate \
     --mount type=tmpfs,target=/tmp/cache,tmpfs-size=1000000000 \
