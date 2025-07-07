@@ -44,7 +44,7 @@ setup_ufw() {
     rsync   # Backup
     ssh     # SSH
     Syslog  # syslog server
-    Webmin  # Webmin web UI
+    #Webmin  # Webmin web UI
   )
   local limit=(
     ssh
