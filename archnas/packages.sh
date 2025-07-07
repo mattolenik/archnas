@@ -2,6 +2,7 @@
 # shellcheck disable=SC2034
 
 system_packages=(
+  archzfs-linux-lts
   base-devel
   bash
   bash-completion
@@ -89,7 +90,5 @@ system_packages=(
 aur_packages=(
   plex-media-server
   rcm # dotfile manager
-  #webmin
-  zfs-dkms
-  zfs-utils
+  webmin
 )

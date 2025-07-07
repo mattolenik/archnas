@@ -96,6 +96,8 @@ install() {
     var/www
   )
   btrfs subvolume create -p "${subvolumes[@]/#//mnt/}"
+  
+  setup_archzfs_repo
 
   # Bootstrap
   pacstrap -K /mnt base "${system_packages[@]}"
@@ -217,6 +219,14 @@ export_vars() {
   for var in "$@"; do
     echo "export $var=\"${!var}\""
   done
+}
+
+setup_archzfs_repo() {
+  tee -a /etc/pacman.conf /mnt/etc/pacman.conf <<EOF
+[archzfs]
+SigLevel = Never
+Server = https://github.com/archzfs/archzfs/releases/download/experimental
+EOF
 }
 
 install
