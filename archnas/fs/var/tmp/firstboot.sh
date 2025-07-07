@@ -2,8 +2,6 @@
 [[ -n ${TRACE:-} ]] && set -x && export TRACE
 set -exuo pipefail
 
-SWAPFILE_SIZE="${SWAPFILE_SIZE:-4G}"
-
 script_name="${0##*/}"
 LOG_FILE="/var/log/${LOG_FILE:-${script_name%.*}.log}"
 exec > >(tee -i "$LOG_FILE")
