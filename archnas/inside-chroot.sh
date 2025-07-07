@@ -33,8 +33,9 @@ main() {
   install_bootloader
   mkdir -p /var/cache/netdata
   setup_issue_message
+  setup_swap
   cleanup
-  snapper create -d "post-install"
+  snapper -c root create -d "Post install"
 }
 
 cleanup() {
@@ -107,15 +108,21 @@ setup_services() {
 }
 
 setup_issue_message() {
-  mkdir -p /etc/issue.d
+  rm -rf /etc/issue.d
+  mkdir /etc/issue.d
+  local fqdn="$HOST_NAME.$DOMAIN"
   cat <<EOF >>/etc/issue.d/service-info.issue
-Cockpit UI at https://\O:9090
-Cockpit UI at https://\o:9090
-
-Frigate UI at http://\O:8971
-
-Webmin  UI at https://\O:10000
+Cockpit: https://$fqdn:9090
+Frigate: http://$fqdn:8971
+Webmin:  https://$fqdn:10000
 EOF
+}
+
+setup_swap() {
+  btrfs subvolume create -p /swap
+  btrfs filesystem mkswapfile --size "$SWAPFILE_SIZE" --uuid clear /swap/swapfile
+  swapon /swap/swapfile
+  echo "/swap/swapfile none swap defaults 0 0" >>/etc/fstab
 }
 
 main "$@"

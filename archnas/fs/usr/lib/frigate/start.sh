@@ -23,7 +23,9 @@ podman run \
     -v "$CONFIG_DIR:/config" \
     -v "$RUNTIME_CONFIG:/config/config.yml" \
     -v /etc/localtime:/etc/localtime:ro \
-    -p 8554:8554 \
-    -p 8971:8971 \
-    -p 8555:8555 "$FRIGATE_IMAGE:$FRIGATE_VERSION"
+    -p "$PORT_UI:8971" \
+    -p "$PORT_RTSP:8554" \
+    -p "$PORT_WEBRTC:8555/tcp" \
+    -p "$PORT_WEBRTC:8555/udp" \
+    "$FRIGATE_IMAGE:$FRIGATE_VERSION"
 

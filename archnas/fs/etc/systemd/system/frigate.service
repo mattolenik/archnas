@@ -15,9 +15,8 @@ Environment=RUNTIME_CONFIG=%t/%n.config.yml
 EnvironmentFile=/etc/frigate.conf
 
 ExecStart=/usr/lib/frigate/start.sh
-ExecStop=/usr/bin/podman stop --ignore -t 10 --cidfile=%t/%n.ctr-id
-
-ExecStopPost=/usr/bin/podman rm -f --ignore -t 10 --cidfile=%t/%n.ctr-id
+ExecStop=/usr/bin/podman stop --ignore -t 5 --cidfile=%t/%n.ctr-id
+ExecStopPost=/usr/bin/podman rm -f --ignore -t 5 --cidfile=%t/%n.ctr-id
 ExecStopPost=rm -f %t/%n.config.yml
 
 Type=notify
@@ -25,4 +24,3 @@ NotifyAccess=all
 
 [Install]
 WantedBy=default.target
-

@@ -35,7 +35,7 @@ record:
     pre_capture: 10      # seconds of video to save before object is detected
     post_capture: 10     # seconds of video to save after object is detected
     retain:
-      default: 10
+      default: 10        # retain recordings for 10 days
       mode: active_objects
 
 snapshots:

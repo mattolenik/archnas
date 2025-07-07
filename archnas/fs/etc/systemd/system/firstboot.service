@@ -8,4 +8,3 @@ ExecStart=/var/tmp/firstboot.sh
 
 [Install]
 WantedBy=multi-user.target
-

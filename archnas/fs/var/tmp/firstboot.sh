@@ -2,7 +2,7 @@
 [[ -n ${TRACE:-} ]] && set -x && export TRACE
 set -exuo pipefail
 
-SWAPFILE_SIZE="${SWAPFILE_SIZE:-8G}"
+SWAPFILE_SIZE="${SWAPFILE_SIZE:-4G}"
 
 script_name="${0##*/}"
 LOG_FILE="/var/log/${LOG_FILE:-${script_name%.*}.log}"
@@ -26,13 +26,6 @@ setup_snapper() {
   pacman -S --noconfirm snap-pac
 }
 
-setup_swap() {
-  btrfs subvolume create -p /swap
-  btrfs filesystem mkswapfile --size "$SWAPFILE_SIZE" --uuid clear /swap/swapfile
-  swapon /swap/swapfile
-  echo "/swap/swapfile none swap defaults 0 0" >>/etc/fstab
-}
-
 setup_ufw() {
   ufw enable
   ufw default allow outgoing
@@ -46,7 +39,7 @@ setup_ufw() {
     Frigate # Frigate NVR web UI
     http    # HTTP on 80
     https   # HTTPS on 443
-    #Mail    # SMTPS for mail proxy
+    #Mail   # SMTPS for mail proxy
     NFS     # Network File Sharing
     nut     # Network UPS Tools
     Plex    # Plex Server
@@ -76,4 +69,4 @@ setup_ufw
 #import_zfs
 setup_frigate
 
-snapper create -d "first-boot"
+snapper -c root create -d "First boot"
