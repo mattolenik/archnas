@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 [[ -n ${TRACE:-} ]] && set -x && export TRACE
-set -exuo pipefail
+set -euo pipefail
 
 script_name="${0##*/}"
 LOG_FILE="/var/log/${LOG_FILE:-${script_name%.*}.log}"
@@ -55,6 +55,10 @@ setup_ufw() {
   for svc in "${limit[@]}"; do
     ufw limit "$svc"
   done
+}
+
+install_webmin() {
+  yay --noconfirm -Sy webmin
 }
 
 import_zfs() {
