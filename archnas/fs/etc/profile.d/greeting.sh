@@ -3,8 +3,8 @@ Welcome to ArchNAS
 
 If using Frigate, remember to set RTSP passwords, otherwise Frigate will not start:
 
-    echo your_rtsp_password | sudo systemd-creds encrypt - /creds/frigate/rtsp/cam-fd
-    echo ha_mqtt_password | sudo systemd-creds encrypt - /creds/frigate/mqttuser
+    sudo systemd-creds encrypt - /creds/frigate/rtsp/cam-fd <<< your_rtsp_password
+    sudo systemd-creds encrypt - /creds/frigate/mqttuser <<< ha_mqtt_password 
 
 
 After all your setup is done, remove this notice by running:
