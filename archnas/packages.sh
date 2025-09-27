@@ -88,5 +88,5 @@ system_packages=(
 )
 
 aur_packages=(
-  #plex-media-server
+  plex-media-server
 )

@@ -37,6 +37,7 @@ export ESP=${ESP:-/boot/efi}
 
 export WINDOWS_WORKGROUP="${WINDOWS_WORKGROUP:-WORKGROUP}"
 export SWAPFILE_SIZE="${SWAPFILE_SIZE:-4G}"
+export STEPS_DIR=/tmp/install-steps  # where temporary install scripts go inside the chroot
 
 install() {
   install_prereqs
@@ -104,16 +105,12 @@ install() {
 
   # Copy over supporting files
   rsync -rv "$IMPORT/fs/" /mnt/
+  rsync -rv "$IMPORT/steps/" "/mnt/$STEPS_DIR/"
 
   genfstab -U /mnt | tee /mnt/etc/fstab
 
-  # Generate config that can't be stored as static files
-  configure_smb
-  configure_logging
-  configure_network_names
-
   # The rest of the install is done inside the chroot environment
-  local vars=(DOMAIN GITHUB_USERNAME HOST_NAME LOCALE PASSWORD SWAPFILE_SIZE TIMEZONE USER_NAME)
+  local vars=(DOMAIN GITHUB_USERNAME HOST_NAME LOCALE PASSWORD STEPS_DIR SWAPFILE_SIZE TIMEZONE USER_NAME)
   local scripts=("packages.sh" "common.sh" "inside-chroot.sh")
   export_vars "${vars[@]}" | cat - "${scripts[@]/#/$IMPORT/}" | arch-chroot /mnt /bin/bash
 
@@ -133,30 +130,6 @@ install() {
 
   echo $'\nInstallation complete! Rebooting'
   reboot
-}
-
-configure_network_names() {
-  echo "$HOST_NAME" >/mnt/etc/hostname
-  echo "$DOMAIN" >/mnt/etc/domain
-}
-
-configure_logging() {
-  printf '\nForwardToSyslog=no\n' >>/mnt/etc/systemd/journald.conf
-}
-
-configure_smb() {
-  mkdir -p /mnt/etc/samba
-  cat <<EOF >/mnt/etc/samba/smb.conf
-[global]
-   workgroup = $WINDOWS_WORKGROUP
-   server string = ArchNAS Samba Server %v
-   server role = standalone server
-   security = user
-   map to guest = never
-   dns proxy = no
-   logging = systemd
-   netbios name = $HOST_NAME
-EOF
 }
 
 install_prereqs() {
@@ -222,7 +195,7 @@ export_vars() {
 }
 
 setup_archzfs_repo() {
-  tee -a /etc/pacman.conf <<EOF
+  tee -a /mnt/etc/pacman.conf <<EOF
 [archzfs]
 SigLevel = Never
 Server = https://github.com/archzfs/archzfs/releases/download/experimental
