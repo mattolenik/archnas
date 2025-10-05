@@ -56,6 +56,7 @@ func credentialFunc(credName string) (string, error) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
+
 	if err != nil {
 		return "", fmt.Errorf("systemd-creds decrypt failed for %s: %v\n%s", path, err, stderr.String())
 	}
